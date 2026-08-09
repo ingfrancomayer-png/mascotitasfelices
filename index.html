@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro de Envío</title>
+  <style>
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    body { background-color: #efeae2; margin: 0; padding: 12px; display: flex; justify-content: center; }
+    .wa-card { background: #ffffff; width: 100%; max-width: 420px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.12); overflow: hidden; }
+    .wa-header { background: #008069; color: #ffffff; padding: 16px; text-align: center; }
+    .wa-header h2 { margin: 0; font-size: 18px; font-weight: 600; }
+    .wa-header p { margin: 4px 0 0 0; font-size: 12px; opacity: 0.9; }
+    .wa-body { padding: 16px; }
+    .field-group { margin-bottom: 14px; }
+    label { display: block; font-size: 12px; font-weight: 600; color: #54656f; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+    input, select { width: 100%; padding: 12px; border: 1px solid #e9edef; border-radius: 8px; font-size: 14px; background: #f0f2f5; outline: none; transition: border-color 0.2s; }
+    input:focus, select:focus { border-color: #008069; background: #fff; }
+    input[readonly] { background-color: #e9ecef; color: #667781; cursor: not-allowed; font-weight: 600; }
+    .btn-submit { width: 100%; background: #00a884; color: white; padding: 14px; border: none; border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .btn-submit:active { background: #008069; }
+    .btn-submit:disabled { background: #aebac1; cursor: not-allowed; }
+    .status-screen { text-align: center; padding: 40px 20px; display: none; }
+    .status-screen h3 { color: #008069; margin-bottom: 8px; }
+    .status-screen p { color: #54656f; font-size: 14px; }
+  </style>
+</head>
+<body>
+
+<div class="wa-card">
+  <div class="wa-header">
+    <h2>📦 Registro de Envío</h2>
+    <p>Complete sus datos para procesar la entrega</p>
+  </div>
+
+  <div class="wa-body" id="form-container">
+    <div class="field-group">
+      <label>Celular</label>
+      <input type="text" id="cli-celular" readonly placeholder="Cargando...">
+    </div>
+
+    <div class="field-group">
+      <label>DNI / Carnet Extranjería</label>
+      <input type="text" id="cli-dni" placeholder="Ingrese número de documento">
+    </div>
+
+    <div class="field-group">
+      <label>Apellidos y Nombres</label>
+      <input type="text" id="cli-nombres" placeholder="Ingrese nombres completos">
+    </div>
+
+    <div class="field-group">
+      <label>Departamento</label>
+      <select id="cli-dep"><option value="">Seleccione Departamento</option></select>
+    </div>
+
+    <div class="field-group">
+      <label>Provincia</label>
+      <select id="cli-prov"><option value="">Seleccione Provincia</option></select>
+    </div>
+
+    <div class="field-group">
+      <label>Distrito</label>
+      <select id="cli-dist"><option value="">Seleccione Distrito</option></select>
+    </div>
+
+    <div class="field-group">
+      <label>Tipo de Entrega</label>
+      <select id="cli-tipo-entrega">
+        <option value="Agencia/Sede">Agencia / Sede</option>
+        <option value="Delivery">Delivery a Domicilio</option>
+      </select>
+    </div>
+
+    <div class="field-group">
+      <label>Sede / Dirección</label>
+      <input type="text" id="cli-direccion-sede" placeholder="Dirección exacta o agencia de preferencia">
+    </div>
+
+    <button class="btn-submit" id="btn-enviar" onclick="enviarDatos()">Confirmar Datos</button>
+  </div>
+
+  <div class="status-screen" id="status-success">
+    <h3>¡Datos Guardados! 🎉</h3>
+    <p>Hemos recibido la información de tu envío. Puedes cerrar esta pestaña.</p>
+  </div>
+
+  <div class="status-screen" id="status-expired">
+    <h3 style="color:#ea0038;">Enlace Inválido ⚠️</h3>
+    <p>Este enlace de un solo uso ya ha sido utilizado o ha caducado.</p>
+  </div>
+</div>
+
+<script>
+  // REEMPLAZAR POR TU URL WEB APP DE GOOGLE APPS SCRIPT
+  const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwEkKMouazHneNoFgfbDh23npHUd4UDwBZmClgxVzfM38y2uSbmnraH8lrolw52LQ21LA/exec";
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const token = urlParams.get('token');
+  let dbUbigeo = [];
+
+  async function inicializar() {
+    if (!token) {
+      mostrarPantalla('status-expired');
+      return;
+    }
+
+    try {
+      const res = await fetch(`${APPS_SCRIPT_URL}?token=${token}`);
+      const data = await res.json();
+
+      if (data.status === "expired" || !data.celular) {
+        mostrarPantalla('status-expired');
+        return;
+      }
+
+      document.getElementById("cli-celular").value = data.celular;
+      dbUbigeo = data.ubigeo || [];
+      poblarDepartamentos();
+
+    } catch (e) {
+      alert("Error al cargar la información del enlace.");
+    }
+  }
+
+  function mostrarPantalla(id) {
+    document.getElementById("form-container").style.display = "none";
+    document.getElementById(id).style.display = "block";
+  }
+
+  function poblarDepartamentos() {
+    const selDep = document.getElementById("cli-dep");
+    const departamentos = [...new Set(dbUbigeo.map(i => i.departamento))].sort();
+    departamentos.forEach(dep => {
+      if (dep) selDep.innerHTML += `<option value="${dep}">${dep}</option>`;
+    });
+  }
+
+  document.getElementById("cli-dep").addEventListener("change", function() {
+    const depSel = this.value;
+    const selProv = document.getElementById("cli-prov");
+    const selDist = document.getElementById("cli-dist");
+    selProv.innerHTML = '<option value="">Seleccione Provincia</option>';
+    selDist.innerHTML = '<option value="">Seleccione Distrito</option>';
+    if (!depSel) return;
+
+    const provincias = [...new Set(dbUbigeo.filter(i => i.departamento === depSel).map(i => i.provincia))].sort();
+    provincias.forEach(p => { if (p) selProv.innerHTML += `<option value="${p}">${p}</option>`; });
+  });
+
+  document.getElementById("cli-prov").addEventListener("change", function() {
+    const depSel = document.getElementById("cli-dep").value;
+    const provSel = this.value;
+    const selDist = document.getElementById("cli-dist");
+    selDist.innerHTML = '<option value="">Seleccione Distrito</option>';
+    if (!provSel) return;
+
+    const distritos = [...new Set(dbUbigeo.filter(i => i.departamento === depSel && i.provincia === provSel).map(i => i.distrito))].sort();
+    distritos.forEach(d => { if (d) selDist.innerHTML += `<option value="${d}">${d}</option>`; });
+  });
+
+  async function enviarDatos() {
+    const btn = document.getElementById("btn-enviar");
+    btn.innerText = "Procesando...";
+    btn.disabled = true;
+
+    const payload = {
+      action: "cliente_submit",
+      token: token,
+      dni: document.getElementById("cli-dni").value,
+      nombres: document.getElementById("cli-nombres").value,
+      departamento: document.getElementById("cli-dep").value,
+      provincia: document.getElementById("cli-prov").value,
+      distrito: document.getElementById("cli-dist").value,
+      tipoEntrega: document.getElementById("cli-tipo-entrega").value,
+      direccionSede: document.getElementById("cli-direccion-sede").value
+    };
+
+    try {
+      const res = await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+
+      if (data.status === "updated" || data.status === "created") {
+        mostrarPantalla('status-success');
+      } else {
+        mostrarPantalla('status-expired');
+      }
+    } catch (e) {
+      alert("Error de conexión al enviar el formulario.");
+      btn.innerText = "Confirmar Datos";
+      btn.disabled = false;
+    }
+  }
+
+  inicializar();
+</script>
+</body>
+</html>
