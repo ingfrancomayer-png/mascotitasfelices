@@ -12,7 +12,6 @@
       --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
       --card-bg: #ffffff;
       --text-main: #0f172a;
-      --text-muted: #64748b;
       --border-color: #e2e8f0;
       --focus-ring: rgba(37, 99, 235, 0.2);
     }
@@ -38,9 +37,10 @@
       width: 100%;
       max-width: 480px;
       border-radius: 20px;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
       overflow: hidden;
       animation: fadeIn 0.4s ease-out;
+      position: relative;
     }
 
     @keyframes fadeIn {
@@ -58,14 +58,12 @@
     .card-header h2 {
       font-size: 22px;
       font-weight: 800;
-      letter-spacing: -0.5px;
       margin-bottom: 6px;
     }
 
     .card-header p {
       font-size: 13px;
       color: #93c5fd;
-      font-weight: 500;
     }
 
     .card-body {
@@ -83,7 +81,6 @@
       color: var(--text-main);
       margin-bottom: 6px;
       text-transform: uppercase;
-      letter-spacing: 0.3px;
     }
 
     input, select {
@@ -104,12 +101,10 @@
       box-shadow: 0 0 0 4px var(--focus-ring);
     }
 
-    input[readonly] {
+    input[readonly], select[disabled] {
       background-color: #f1f5f9;
       color: #64748b;
-      border-color: #e2e8f0;
       cursor: not-allowed;
-      font-weight: 600;
     }
 
     .hidden {
@@ -131,23 +126,34 @@
       margin-top: 10px;
     }
 
-    .btn-submit:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
-    }
-
     .btn-submit:disabled {
       background: #cbd5e1;
       box-shadow: none;
       cursor: not-allowed;
-      transform: none;
     }
 
-    .badge-info {
-      font-size: 11px;
+    /* PANTALLA DE BLOQUEO Y ÉXITO */
+    .blocked-screen {
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .blocked-icon {
+      font-size: 54px;
+      margin-bottom: 15px;
+    }
+
+    .blocked-screen h3 {
+      font-size: 20px;
+      color: #1e293b;
+      margin-bottom: 10px;
+      font-weight: 800;
+    }
+
+    .blocked-screen p {
+      font-size: 14px;
       color: #64748b;
-      margin-top: 4px;
-      display: block;
+      line-height: 1.5;
     }
   </style>
 </head>
@@ -156,10 +162,20 @@
   <div class="card">
     <div class="card-header">
       <h2>📦 Datos de Entrega</h2>
-      <p>Confirma tus datos para procesar el envío</p>
+      <p id="subtitulo-header">Confirma tus datos para procesar el envío</p>
     </div>
 
     <div class="card-body">
+      
+      <!-- PANTALLA BLOQUEADA (INICIALMENTE OCULTA) -->
+      <div id="pantalla-bloqueada" class="blocked-screen hidden">
+        <div class="blocked-icon">✅</div>
+        <h3>¡Envío Registrado Exitosamente!</h3>
+        <p>Tus datos han sido guardados correctamente y el formulario ha sido bloqueado.</p>
+        <p style="margin-top: 12px; font-size: 12px; color: #94a3b8;">Si necesitas modificar algo, solicita un nuevo enlace de confirmación.</p>
+      </div>
+
+      <!-- FORMULARIO DE REGISTRO -->
       <form id="form-registro">
         <div class="form-group">
           <label for="celular">Celular de Contacto</label>
@@ -204,7 +220,6 @@
           </select>
         </div>
 
-        <!-- SECCIÓN AGENCIA (SOLO SI NO ES CHIMBOTE / NUEVO CHIMBOTE) -->
         <div id="wrapper-agencia" class="form-group hidden">
           <label for="agencia">Agencia de Envío</label>
           <select id="agencia" name="agencia">
@@ -215,13 +230,11 @@
           </select>
         </div>
 
-        <!-- CAMPO AGENCIA MANUAL (SI SELECCIONA OTROS) -->
         <div id="wrapper-agencia-otra" class="form-group hidden">
           <label for="agencia_otra">Nombre de la Agencia</label>
           <input type="text" id="agencia_otra" placeholder="Escriba el nombre de la agencia">
         </div>
 
-        <!-- CAMPO SEDE DESPLEGABLE (SI SELECCIONA SHALOM) -->
         <div id="wrapper-sede-select" class="form-group hidden">
           <label for="sede_select">Sede Shalom</label>
           <select id="sede_select">
@@ -229,7 +242,6 @@
           </select>
         </div>
 
-        <!-- CAMPO SEDE / DIRECCIÓN MANUAL (DELIVERY / OLVA / OTROS) -->
         <div id="wrapper-sede-manual" class="form-group">
           <label id="label-sede-manual" for="direccion_manual">Sede / Dirección</label>
           <input type="text" id="direccion_manual" placeholder="Ingrese dirección o sede de entrega">
@@ -246,6 +258,7 @@
     let dbUbigeo = [];
     let dbClientes = [];
     let dbShalom = [];
+    let currentToken = "";
 
     function normalizarTexto(txt) {
       if (!txt) return "";
@@ -258,17 +271,34 @@
       return soloDigitos.length >= 9 ? soloDigitos.slice(-9) : soloDigitos;
     }
 
-    function obtenerCelularDesdeToken() {
+    function obtenerDatosDesdeToken() {
       const urlParams = new URLSearchParams(window.location.search);
       const token = urlParams.get('token');
-      if (!token) return "";
+      if (!token) return { celular: "", tokenID: "" };
+      
+      currentToken = token; // Identificador único de este link
       try {
         const rawData = atob(token);
-        const celularLimpio = rawData.split('_')[0].replace(/\D/g, "");
-        return celularLimpio.length >= 9 ? celularLimpio.slice(-9) : celularLimpio;
+        const partes = rawData.split('_');
+        const celularLimpio = partes[0].replace(/\D/g, "");
+        return {
+          celular: celularLimpio.length >= 9 ? celularLimpio.slice(-9) : celularLimpio,
+          tokenID: token
+        };
       } catch (e) {
-        return "";
+        return { celular: "", tokenID: token };
       }
+    }
+
+    function verificarSiEstaBloqueado(tokenID) {
+      if (!tokenID) return false;
+      return localStorage.getItem("completado_" + tokenID) === "true";
+    }
+
+    function bloquearFormulario() {
+      document.getElementById("form-registro").classList.add("hidden");
+      document.getElementById("pantalla-bloqueada").classList.remove("hidden");
+      document.getElementById("subtitulo-header").textContent = "Registro completado";
     }
 
     async function cargarBaseDatos() {
@@ -486,11 +516,14 @@
           body: JSON.stringify(payload)
         });
 
-        btn.textContent = "✅ ¡Datos Actualizados!";
-        setTimeout(() => {
-          btn.disabled = false;
-          btn.textContent = "Confirmar y Guardar Datos";
-        }, 3000);
+        // Marcar este link/token como consumido para bloquearlo
+        if (currentToken) {
+          localStorage.setItem("completado_" + currentToken, "true");
+        }
+
+        // Mostrar pantalla de bloqueo y éxito
+        bloquearFormulario();
+
       } catch (err) {
         alert("Ocurrió un error al guardar los datos.");
         btn.disabled = false;
@@ -499,8 +532,14 @@
     }
 
     document.addEventListener("DOMContentLoaded", async () => {
-      const cel = obtenerCelularDesdeToken();
-      document.getElementById("celular").value = cel;
+      const datosToken = obtenerDatosDesdeToken();
+      document.getElementById("celular").value = datosToken.celular;
+
+      // Si este token ya se usó para guardar, bloquear de inmediato
+      if (verificarSiEstaBloqueado(datosToken.tokenID)) {
+        bloquearFormulario();
+        return;
+      }
 
       document.getElementById("departamento").addEventListener("change", (e) => poblarProvincias(e.target.value));
       document.getElementById("provincia").addEventListener("change", (e) => poblarDistritos(document.getElementById("departamento").value, e.target.value));
@@ -509,7 +548,7 @@
       document.getElementById("form-registro").addEventListener("submit", guardarFormulario);
 
       await cargarBaseDatos();
-      if (cel) autocompletarCliente(cel);
+      if (datosToken.celular) autocompletarCliente(datosToken.celular);
     });
   </script>
 </body>
