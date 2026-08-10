@@ -253,6 +253,7 @@
 
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbw3L8PHJ4teJL1aOvpGNdFBnz_STLvwXjuLQaAV2tFl-Jy1tVI-RbRc5th2SbP7eAqQog/exec";
+    const NUMERO_DESTINO_WA = "51973376798";
 
     let dbUbigeo = [];
     let dbClientes = [];
@@ -417,6 +418,8 @@
       if (tipoEntrega === "Recojo en local") return;
 
       const agencia = document.getElementById("agencia").value;
+      const dep = document.getElementById("departamento").value;
+      const prov = document.getElementById("provincia").value;
       const distrito = document.getElementById("distrito").value;
 
       const wrapperOtra = document.getElementById("wrapper-agencia-otra");
@@ -434,7 +437,7 @@
       if (agencia === "Shalom") {
         wrapperSelectSede.classList.remove("hidden");
         wrapperManualSede.classList.add("hidden");
-        poblarSedesShalom(distrito);
+        poblarSedesShalom(dep, prov, distrito);
       } else {
         wrapperSelectSede.classList.add("hidden");
         wrapperManualSede.classList.remove("hidden");
@@ -442,18 +445,38 @@
       }
     }
 
-    function poblarSedesShalom(distrito) {
+    function poblarSedesShalom(dep, prov, distrito) {
       const selSede = document.getElementById("sede_select");
       if (!distrito) {
         selSede.innerHTML = '<option value="Sin sede registrada">Sin sede registrada</option>';
         return;
       }
 
+      const depNorm = normalizarTexto(dep);
+      const provNorm = normalizarTexto(prov);
       const distNorm = normalizarTexto(distrito);
+
       const sedes = dbShalom.filter(item => {
-        const distSheet = item.DISTRITO || item.distrito || "";
-        return normalizarTexto(distSheet) === distNorm;
-      }).map(item => String(item.SEDE || item.sede || "").trim()).filter(s => s !== "");
+        let dDep = "", dProv = "", dDist = "";
+        Object.keys(item).forEach(k => {
+          const keyNorm = normalizarTexto(k);
+          if (keyNorm.includes("departamento") || keyNorm.includes("dep")) dDep = item[k];
+          if (keyNorm.includes("provincia") || keyNorm.includes("prov")) dProv = item[k];
+          if (keyNorm.includes("distrito") || keyNorm.includes("dist")) dDist = item[k];
+        });
+
+        const coincideDist = normalizarTexto(dDist) === distNorm;
+        const coincideProv = !dProv || normalizarTexto(dProv) === provNorm;
+        const coincideDep = !dDep || normalizarTexto(dDep) === depNorm;
+
+        return coincideDist && coincideProv && coincideDep;
+      }).map(item => {
+        let nombreSede = "";
+        Object.keys(item).forEach(k => {
+          if (normalizarTexto(k).includes("sede")) nombreSede = item[k];
+        });
+        return String(nombreSede || "").trim();
+      }).filter(s => s !== "");
 
       if (sedes.length > 0) {
         let html = '<option value="">Seleccione Sede Shalom</option>';
@@ -504,6 +527,12 @@
       btn.disabled = true;
       btn.textContent = "⏳ Guardando...";
 
+      const celularVal = document.getElementById("celular").value;
+      const dniVal = document.getElementById("dni").value;
+      const nombreVal = document.getElementById("nombre").value;
+      const depVal = document.getElementById("departamento").value;
+      const provVal = document.getElementById("provincia").value;
+      const distVal = document.getElementById("distrito").value;
       const tipoEntregaVal = document.getElementById("tipo_entrega").value;
       const agenciaSel = document.getElementById("agencia").value;
       
@@ -521,12 +550,12 @@
       }
 
       const payload = {
-        telefono: document.getElementById("celular").value,
-        dni: document.getElementById("dni").value,
-        nombre: document.getElementById("nombre").value,
-        departamento: document.getElementById("departamento").value,
-        provincia: document.getElementById("provincia").value,
-        distrito: document.getElementById("distrito").value,
+        telefono: celularVal,
+        dni: dniVal,
+        nombre: nombreVal,
+        departamento: depVal,
+        provincia: provVal,
+        distrito: distVal,
         tipoEntrega: tipoEntregaVal,
         agencia: agenciaFinal,
         direccionSede: sedeFinal,
@@ -546,6 +575,21 @@
         }
 
         bloquearFormulario();
+
+        // Construir mensaje predeterminado para WhatsApp
+        let mensajeWA = `¡Hola! Ya completé mis datos de envío:\n\n`;
+        mensajeWA += `👤 *Nombre:* ${nombreVal}\n`;
+        mensajeWA += `📄 *DNI/CE:* ${dniVal}\n`;
+        mensajeWA += `📱 *Celular:* ${celularVal}\n`;
+        mensajeWA += `📍 *Ubicación:* ${depVal} - ${provVal} - ${distVal}\n`;
+        mensajeWA += `🚚 *Tipo de Entrega:* ${tipoEntregaVal}\n`;
+        if (agenciaFinal) mensajeWA += `🏢 *Agencia:* ${agenciaFinal}\n`;
+        if (sedeFinal) mensajeWA += `📍 *Sede/Dirección:* ${sedeFinal}\n`;
+
+        const urlWA = `https://wa.me/${NUMERO_DESTINO_WA}?text=${encodeURIComponent(mensajeWA)}`;
+        
+        // Redireccionar al WhatsApp
+        window.location.href = urlWA;
 
       } catch (err) {
         alert("Ocurrió un error al guardar los datos.");
