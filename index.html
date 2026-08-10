@@ -58,6 +58,10 @@
     button:hover {
       background-color: #1eb857;
     }
+    button:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body>
@@ -71,31 +75,31 @@
 
       <div class="form-group">
         <label for="dni">DNI / Carnet de extranjería:</label>
-        <input type="text" id="dni" name="dni" placeholder="Ingrese su DNI o carnet">
+        <input type="text" id="dni" name="dni" placeholder="Ingrese su DNI o carnet" required>
       </div>
 
       <div class="form-group">
         <label for="nombre">Apellidos y Nombres:</label>
-        <input type="text" id="nombre" name="nombre" placeholder="Ingrese su nombre completo">
+        <input type="text" id="nombre" name="nombre" placeholder="Ingrese su nombre completo" required>
       </div>
 
       <div class="form-group">
         <label for="departamento">Departamento:</label>
-        <select id="departamento" name="departamento">
+        <select id="departamento" name="departamento" required>
           <option value="">Seleccione Departamento</option>
         </select>
       </div>
 
       <div class="form-group">
         <label for="provincia">Provincia:</label>
-        <select id="provincia" name="provincia">
+        <select id="provincia" name="provincia" required>
           <option value="">Seleccione Provincia</option>
         </select>
       </div>
 
       <div class="form-group">
         <label for="distrito">Distrito:</label>
-        <select id="distrito" name="distrito">
+        <select id="distrito" name="distrito" required>
           <option value="">Seleccione Distrito</option>
         </select>
       </div>
@@ -110,10 +114,10 @@
 
       <div class="form-group">
         <label for="direccion">Sede/Dirección:</label>
-        <input type="text" id="direccion" name="direccion" placeholder="Dirección o punto de entrega">
+        <input type="text" id="direccion" name="direccion" placeholder="Dirección o punto de entrega" required>
       </div>
 
-      <button type="submit">💾 Guardar Mis Datos</button>
+      <button type="submit" id="btn-guardar">💾 Guardar Mis Datos</button>
     </form>
   </div>
 
@@ -285,14 +289,56 @@
             const inputSede = document.getElementById("direccion");
             if (inputSede && val) inputSede.value = val;
           }
+          if (key.includes("entreg") || key.includes("tipo")) {
+            const selTipo = document.getElementById("tipo_entrega");
+            if (selTipo && val) selTipo.value = val;
+          }
         });
       }
     }
 
-    // 6. Configurar eventos de cambio en Ubigeo
+    // 6. Enviar Formulario a Google Sheets
+    async function guardarDatosFormulario(e) {
+      e.preventDefault();
+
+      const btnGuardar = document.getElementById("btn-guardar");
+      btnGuardar.disabled = true;
+      btnGuardar.textContent = "⏳ Guardando datos...";
+
+      const payload = {
+        telefono: document.getElementById("celular").value,
+        dni: document.getElementById("dni").value,
+        nombre: document.getElementById("nombre").value,
+        departamento: document.getElementById("departamento").value,
+        provincia: document.getElementById("provincia").value,
+        distrito: document.getElementById("distrito").value,
+        tipo_entrega: document.getElementById("tipo_entrega").value,
+        direccion: document.getElementById("direccion").value
+      };
+
+      try {
+        await fetch(API_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        alert("¡Datos guardados con éxito!");
+        btnGuardar.textContent = "✅ Guardado Correctamente";
+      } catch (err) {
+        console.error("Error al guardar:", err);
+        alert("Ocurrió un error al guardar los datos.");
+        btnGuardar.disabled = false;
+        btnGuardar.textContent = "💾 Guardar Mis Datos";
+      }
+    }
+
+    // 7. Configurar eventos de cambio en Ubigeo y Guardado
     function configurarEventos() {
       const selDep = document.getElementById("departamento");
       const selProv = document.getElementById("provincia");
+      const form = document.getElementById("form-registro");
 
       if (selDep) {
         selDep.addEventListener("change", () => {
@@ -305,9 +351,13 @@
           poblarDistritosWeb(selDep ? selDep.value : "", selProv.value);
         });
       }
+
+      if (form) {
+        form.addEventListener("submit", guardarDatosFormulario);
+      }
     }
 
-    // 7. Inicializar al cargar la página
+    // 8. Inicializar al cargar la página
     document.addEventListener("DOMContentLoaded", async () => {
       const celularLimpio = obtenerCelularDesdeToken();
       const inputCelular = document.getElementById("celular");
