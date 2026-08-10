@@ -109,7 +109,6 @@
         <select id="tipo_entrega" name="tipo_entrega">
           <option value="Agencia">Agencia</option>
           <option value="Domicilio">Domicilio</option>
-          <option value="Recojo en local">Recojo en local</option>
         </select>
       </div>
 
@@ -136,7 +135,7 @@
     function normalizarTelefono(num) {
       if (!num) return "";
       const soloDigitos = String(num).replace(/\D/g, "");
-      return soloDigitos.length >= 9 ? "51" + soloDigitos.slice(-9) : soloDigitos;
+      return soloDigitos.length >= 9 ? soloDigitos.slice(-9) : soloDigitos;
     }
 
     function obtenerCelularDesdeToken() {
@@ -148,7 +147,7 @@
       try {
         const rawData = atob(token);
         const celularLimpio = rawData.split('_')[0].replace(/\D/g, "");
-        return celularLimpio.length >= 9 ? "51" + celularLimpio.slice(-9) : celularLimpio;
+        return celularLimpio.length >= 9 ? celularLimpio.slice(-9) : celularLimpio;
       } catch (e) {
         console.error("Error al decodificar token:", e);
         return "";
@@ -307,32 +306,26 @@
         departamento: document.getElementById("departamento").value,
         provincia: document.getElementById("provincia").value,
         distrito: document.getElementById("distrito").value,
-        tipo_entrega: document.getElementById("tipo_entrega").value,
-        direccion: document.getElementById("direccion").value
+        tipoEntrega: document.getElementById("tipo_entrega").value,
+        direccionSede: document.getElementById("direccion").value
       };
 
       try {
-        // Se envía usando URLSearchParams para garantizar la recepción en Google Apps Script
-        const formData = new URLSearchParams();
-        formData.append("data", JSON.stringify(payload));
-
         await fetch(API_URL, {
           method: "POST",
           mode: "no-cors",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
-          },
-          body: formData.toString()
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload)
         });
 
-        btnGuardar.textContent = "✅ Guardado Correctamente";
+        btnGuardar.textContent = "✅ Guardado / Actualizado";
         setTimeout(() => {
           btnGuardar.disabled = false;
           btnGuardar.textContent = "💾 Guardar Mis Datos";
         }, 3000);
       } catch (err) {
         console.error("Error al guardar:", err);
-        alert("Ocurrió un error al guardar los datos.");
+        alert("Ocurrió un error al intentar guardar.");
         btnGuardar.disabled = false;
         btnGuardar.textContent = "💾 Guardar Mis Datos";
       }
@@ -361,18 +354,18 @@
     }
 
     document.addEventListener("DOMContentLoaded", async () => {
-      const celularCon51 = obtenerCelularDesdeToken();
+      const celularLimpio = obtenerCelularDesdeToken();
       const inputCelular = document.getElementById("celular");
 
       if (inputCelular) {
-        inputCelular.value = celularCon51;
+        inputCelular.value = celularLimpio;
       }
 
       configurarEventos();
       await cargarBaseDatosWeb();
 
-      if (celularCon51) {
-        autocompletarDatosCliente(celularCon51);
+      if (celularLimpio) {
+        autocompletarDatosCliente(celularLimpio);
       }
     });
   </script>
