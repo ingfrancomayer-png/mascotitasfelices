@@ -101,7 +101,7 @@
       box-shadow: 0 0 0 4px var(--focus-ring);
     }
 
-    input[readonly], select[disabled] {
+    input[readonly], select[disabled], input[disabled] {
       background-color: #f1f5f9;
       color: #64748b;
       cursor: not-allowed;
@@ -132,7 +132,6 @@
       cursor: not-allowed;
     }
 
-    /* PANTALLA DE BLOQUEO Y ÉXITO */
     .blocked-screen {
       text-align: center;
       padding: 40px 20px;
@@ -276,7 +275,7 @@
       const token = urlParams.get('token');
       if (!token) return { celular: "", tokenID: "" };
       
-      currentToken = token; // Identificador único de este link
+      currentToken = token;
       try {
         const rawData = atob(token);
         const partes = rawData.split('_');
@@ -368,6 +367,26 @@
       selDist.innerHTML = html;
     }
 
+    function evaluarTipoEntrega() {
+      const tipoEntrega = document.getElementById("tipo_entrega").value;
+      const inputDir = document.getElementById("direccion_manual");
+      const wrapperSelectSede = document.getElementById("wrapper-sede-select");
+      const wrapperManualSede = document.getElementById("wrapper-sede-manual");
+
+      if (tipoEntrega === "Recojo en local") {
+        wrapperSelectSede.classList.add("hidden");
+        wrapperManualSede.classList.remove("hidden");
+        inputDir.value = "Sede Mascotitas Felices";
+        inputDir.disabled = true;
+      } else {
+        if (inputDir.disabled) {
+          inputDir.value = "";
+          inputDir.disabled = false;
+        }
+        evaluarReglasAgencia();
+      }
+    }
+
     function evaluarReglasDistrito() {
       const distrito = document.getElementById("distrito").value;
       const distNorm = normalizarTexto(distrito);
@@ -382,20 +401,21 @@
         `;
         wrapperAgencia.classList.add("hidden");
         document.getElementById("agencia").value = "";
-        evaluarReglasAgencia();
       } else if (distNorm !== "") {
         selTipo.innerHTML = `<option value="Agencia">Agencia</option>`;
         selTipo.value = "Agencia";
         wrapperAgencia.classList.remove("hidden");
-        evaluarReglasAgencia();
       } else {
         selTipo.innerHTML = '<option value="">Seleccione Tipo</option>';
         wrapperAgencia.classList.add("hidden");
-        evaluarReglasAgencia();
       }
+      evaluarTipoEntrega();
     }
 
     function evaluarReglasAgencia() {
+      const tipoEntrega = document.getElementById("tipo_entrega").value;
+      if (tipoEntrega === "Recojo en local") return;
+
       const agencia = document.getElementById("agencia").value;
       const distrito = document.getElementById("distrito").value;
 
@@ -484,13 +504,17 @@
       btn.disabled = true;
       btn.textContent = "⏳ Guardando...";
 
+      const tipoEntregaVal = document.getElementById("tipo_entrega").value;
       const agenciaSel = document.getElementById("agencia").value;
+      
       const agenciaFinal = agenciaSel === "Otros" 
         ? document.getElementById("agencia_otra").value 
         : agenciaSel;
 
       let sedeFinal = "";
-      if (agenciaSel === "Shalom") {
+      if (tipoEntregaVal === "Recojo en local") {
+        sedeFinal = "Sede Mascotitas Felices";
+      } else if (agenciaSel === "Shalom") {
         sedeFinal = document.getElementById("sede_select").value;
       } else {
         sedeFinal = document.getElementById("direccion_manual").value;
@@ -503,9 +527,10 @@
         departamento: document.getElementById("departamento").value,
         provincia: document.getElementById("provincia").value,
         distrito: document.getElementById("distrito").value,
-        tipoEntrega: document.getElementById("tipo_entrega").value,
+        tipoEntrega: tipoEntregaVal,
         agencia: agenciaFinal,
-        direccionSede: sedeFinal
+        direccionSede: sedeFinal,
+        estado: "Pendiente"
       };
 
       try {
@@ -516,12 +541,10 @@
           body: JSON.stringify(payload)
         });
 
-        // Marcar este link/token como consumido para bloquearlo
         if (currentToken) {
           localStorage.setItem("completado_" + currentToken, "true");
         }
 
-        // Mostrar pantalla de bloqueo y éxito
         bloquearFormulario();
 
       } catch (err) {
@@ -535,7 +558,6 @@
       const datosToken = obtenerDatosDesdeToken();
       document.getElementById("celular").value = datosToken.celular;
 
-      // Si este token ya se usó para guardar, bloquear de inmediato
       if (verificarSiEstaBloqueado(datosToken.tokenID)) {
         bloquearFormulario();
         return;
@@ -544,6 +566,7 @@
       document.getElementById("departamento").addEventListener("change", (e) => poblarProvincias(e.target.value));
       document.getElementById("provincia").addEventListener("change", (e) => poblarDistritos(document.getElementById("departamento").value, e.target.value));
       document.getElementById("distrito").addEventListener("change", evaluarReglasDistrito);
+      document.getElementById("tipo_entrega").addEventListener("change", evaluarTipoEntrega);
       document.getElementById("agencia").addEventListener("change", evaluarReglasAgencia);
       document.getElementById("form-registro").addEventListener("submit", guardarFormulario);
 
