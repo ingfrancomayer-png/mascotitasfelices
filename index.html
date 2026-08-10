@@ -3,199 +3,435 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Registro de Envío</title>
+  <title>Formulario de Envío</title>
   <style>
-    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-    body { background-color: #efeae2; margin: 0; padding: 12px; display: flex; justify-content: center; }
-    .wa-card { background: #ffffff; width: 100%; max-width: 420px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.12); overflow: hidden; }
-    .wa-header { background: #008069; color: #ffffff; padding: 16px; text-align: center; }
-    .wa-header h2 { margin: 0; font-size: 18px; font-weight: 600; }
-    .wa-header p { margin: 4px 0 0 0; font-size: 12px; opacity: 0.9; }
-    .wa-body { padding: 16px; }
-    .field-group { margin-bottom: 14px; }
-    label { display: block; font-size: 12px; font-weight: 600; color: #54656f; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-    input, select { width: 100%; padding: 12px; border: 1px solid #e9edef; border-radius: 8px; font-size: 14px; background: #f0f2f5; outline: none; transition: border-color 0.2s; }
-    input:focus, select:focus { border-color: #008069; background: #fff; }
-    input[readonly] { background-color: #e9ecef; color: #667781; cursor: not-allowed; font-weight: 600; }
-    .btn-submit { width: 100%; background: #00a884; color: white; padding: 14px; border: none; border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    .btn-submit:active { background: #008069; }
-    .btn-submit:disabled { background: #aebac1; cursor: not-allowed; }
-    .status-screen { text-align: center; padding: 40px 20px; display: none; }
-    .status-screen h3 { color: #008069; margin-bottom: 8px; }
-    .status-screen p { color: #54656f; font-size: 14px; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f0f2f5;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+    .card {
+      background: #ffffff;
+      padding: 24px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 420px;
+      box-sizing: border-box;
+    }
+    h2 {
+      margin-top: 0;
+      color: #008069;
+      font-size: 20px;
+      text-align: center;
+      margin-bottom: 15px;
+    }
+    hr {
+      border: 0;
+      border-top: 1px solid #e0e0e0;
+      margin-bottom: 15px;
+    }
+    label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+      display: block;
+      margin-bottom: 4px;
+    }
+    input[type="text"], select {
+      width: 100%;
+      padding: 8px 10px;
+      margin-bottom: 12px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+      font-size: 14px;
+    }
+    input:disabled {
+      background-color: #e0e0e0;
+      color: #555;
+      cursor: not-allowed;
+    }
+    button {
+      width: 100%;
+      background-color: #25D366;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 4px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    button:hover {
+      background-color: #1ebc57;
+    }
+    #mensaje-carga {
+      text-align: center;
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 <body>
 
-<div class="wa-card">
-  <div class="wa-header">
-    <h2>📦 Registro de Envío</h2>
-    <p>Complete sus datos para procesar la entrega</p>
-  </div>
+  <div class="card">
+    <h2>📦 Datos para Envío</h2>
+    <hr>
+    <div id="mensaje-carga">Cargando datos...</div>
 
-  <div class="wa-body" id="form-container">
-    <div class="field-group">
-      <label>Celular</label>
-      <input type="text" id="cli-celular" readonly placeholder="Cargando...">
-    </div>
+    <form id="form-cliente" style="display:none;">
+      <label>Celular:</label>
+      <input type="text" id="cli-telefono" disabled>
 
-    <div class="field-group">
-      <label>DNI / Carnet Extranjería</label>
-      <input type="text" id="cli-dni" placeholder="Ingrese número de documento">
-    </div>
+      <label>DNI / Carnet de extranjería:</label>
+      <input type="text" id="cli-dni" placeholder="Ingrese su DNI o carnet" required>
 
-    <div class="field-group">
-      <label>Apellidos y Nombres</label>
-      <input type="text" id="cli-nombres" placeholder="Ingrese nombres completos">
-    </div>
+      <label>Apellidos y Nombres:</label>
+      <input type="text" id="cli-nombre" placeholder="Ingrese su nombre completo" required>
 
-    <div class="field-group">
-      <label>Departamento</label>
-      <select id="cli-dep"><option value="">Seleccione Departamento</option></select>
-    </div>
-
-    <div class="field-group">
-      <label>Provincia</label>
-      <select id="cli-prov"><option value="">Seleccione Provincia</option></select>
-    </div>
-
-    <div class="field-group">
-      <label>Distrito</label>
-      <select id="cli-dist"><option value="">Seleccione Distrito</option></select>
-    </div>
-
-    <div class="field-group">
-      <label>Tipo de Entrega</label>
-      <select id="cli-tipo-entrega">
-        <option value="Agencia/Sede">Agencia / Sede</option>
-        <option value="Delivery">Delivery a Domicilio</option>
+      <label>Departamento:</label>
+      <select id="cli-dep" required>
+        <option value="">Seleccione Departamento</option>
       </select>
-    </div>
 
-    <div class="field-group">
-      <label>Sede / Dirección</label>
-      <input type="text" id="cli-direccion-sede" placeholder="Dirección exacta o agencia de preferencia">
-    </div>
+      <label>Provincia:</label>
+      <select id="cli-prov" required>
+        <option value="">Seleccione Provincia</option>
+      </select>
 
-    <button class="btn-submit" id="btn-enviar" onclick="enviarDatos()">Confirmar Datos</button>
+      <label>Distrito:</label>
+      <select id="cli-dist" required>
+        <option value="">Seleccione Distrito</option>
+      </select>
+
+      <label>Tipo de entrega:</label>
+      <select id="cli-tipo-entrega" required>
+        <option value="Agencia">Agencia</option>
+      </select>
+
+      <div id="cli-container-agencia" style="display:none;">
+        <label>Agencia:</label>
+        <select id="cli-agencia">
+          <option value="Shalom">Shalom</option>
+          <option value="Olva">Olva</option>
+          <option value="Otro">Otro</option>
+        </select>
+      </div>
+
+      <div id="cli-container-sede">
+        <label>Sede/Dirección:</label>
+        <input type="text" id="cli-direccion-sede" placeholder="Dirección o punto de entrega" required>
+      </div>
+
+      <button type="submit" id="btn-guardar">💾 Guardar Mis Datos</button>
+    </form>
   </div>
 
-  <div class="status-screen" id="status-success">
-    <h3>¡Datos Guardados! 🎉</h3>
-    <p>Hemos recibido la información de tu envío. Puedes cerrar esta pestaña.</p>
-  </div>
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbw3L8PHJ4teJL1aOvpGNdFBnz_STLvwXjuLQaAV2tFl-Jy1tVI-RbRc5th2SbP7eAqQog/exec";
 
-  <div class="status-screen" id="status-expired">
-    <h3 style="color:#ea0038;">Enlace Inválido ⚠️</h3>
-    <p>Este enlace de un solo uso ya ha sido utilizado o ha caducado.</p>
-  </div>
-</div>
+    let dbUbigeo = [];
+    let dbClientes = [];
+    let dbShalom = [];
+    let celularCliente = "";
 
-<script>
-  // REEMPLAZAR POR TU URL WEB APP DE GOOGLE APPS SCRIPT
-  const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwEkKMouazHneNoFgfbDh23npHUd4UDwBZmClgxVzfM38y2uSbmnraH8lrolw52LQ21LA/exec";
-
-  const urlParams = new URLSearchParams(window.location.search);
-  const token = urlParams.get('token');
-  let dbUbigeo = [];
-
-  async function inicializar() {
-    if (!token) {
-      mostrarPantalla('status-expired');
-      return;
+    function normalizarTexto(txt) {
+      if (!txt) return "";
+      return String(txt).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
     }
 
-    try {
-      const res = await fetch(`${APPS_SCRIPT_URL}?token=${token}`);
-      const data = await res.json();
+    function normalizarTelefono(num) {
+      if (!num) return "";
+      const soloDigitos = String(num).replace(/\D/g, "");
+      return soloDigitos.length >= 9 ? soloDigitos.slice(-9) : soloDigitos;
+    }
 
-      if (data.status === "expired" || !data.celular) {
-        mostrarPantalla('status-expired');
+    async function inicializar() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get("token");
+
+      if (!token) {
+        document.getElementById("mensaje-carga").innerText = "❌ Enlace no válido. Solicite un nuevo link.";
         return;
       }
 
-      document.getElementById("cli-celular").value = data.celular;
-      dbUbigeo = data.ubigeo || [];
-      poblarDepartamentos();
+      try {
+        const res = await fetch(`${API_URL}?action=validar_token&token=${encodeURIComponent(token)}`);
+        const data = await res.json();
 
-    } catch (e) {
-      alert("Error al cargar la información del enlace.");
-    }
-  }
-
-  function mostrarPantalla(id) {
-    document.getElementById("form-container").style.display = "none";
-    document.getElementById(id).style.display = "block";
-  }
-
-  function poblarDepartamentos() {
-    const selDep = document.getElementById("cli-dep");
-    const departamentos = [...new Set(dbUbigeo.map(i => i.departamento))].sort();
-    departamentos.forEach(dep => {
-      if (dep) selDep.innerHTML += `<option value="${dep}">${dep}</option>`;
-    });
-  }
-
-  document.getElementById("cli-dep").addEventListener("change", function() {
-    const depSel = this.value;
-    const selProv = document.getElementById("cli-prov");
-    const selDist = document.getElementById("cli-dist");
-    selProv.innerHTML = '<option value="">Seleccione Provincia</option>';
-    selDist.innerHTML = '<option value="">Seleccione Distrito</option>';
-    if (!depSel) return;
-
-    const provincias = [...new Set(dbUbigeo.filter(i => i.departamento === depSel).map(i => i.provincia))].sort();
-    provincias.forEach(p => { if (p) selProv.innerHTML += `<option value="${p}">${p}</option>`; });
-  });
-
-  document.getElementById("cli-prov").addEventListener("change", function() {
-    const depSel = document.getElementById("cli-dep").value;
-    const provSel = this.value;
-    const selDist = document.getElementById("cli-dist");
-    selDist.innerHTML = '<option value="">Seleccione Distrito</option>';
-    if (!provSel) return;
-
-    const distritos = [...new Set(dbUbigeo.filter(i => i.departamento === depSel && i.provincia === provSel).map(i => i.distrito))].sort();
-    distritos.forEach(d => { if (d) selDist.innerHTML += `<option value="${d}">${d}</option>`; });
-  });
-
-  async function enviarDatos() {
-    const btn = document.getElementById("btn-enviar");
-    btn.innerText = "Procesando...";
-    btn.disabled = true;
-
-    const payload = {
-      action: "cliente_submit",
-      token: token,
-      dni: document.getElementById("cli-dni").value,
-      nombres: document.getElementById("cli-nombres").value,
-      departamento: document.getElementById("cli-dep").value,
-      provincia: document.getElementById("cli-prov").value,
-      distrito: document.getElementById("cli-dist").value,
-      tipoEntrega: document.getElementById("cli-tipo-entrega").value,
-      direccionSede: document.getElementById("cli-direccion-sede").value
-    };
-
-    try {
-      const res = await fetch(APPS_SCRIPT_URL, {
-        method: "POST",
-        body: JSON.stringify(payload)
-      });
-      const data = await res.json();
-
-      if (data.status === "updated" || data.status === "created") {
-        mostrarPantalla('status-success');
-      } else {
-        mostrarPantalla('status-expired');
+        if (data.status === "success" && data.celular) {
+          celularCliente = data.celular;
+          document.getElementById("cli-telefono").value = celularCliente;
+          await cargarBaseDatos();
+          
+          document.getElementById("mensaje-carga").style.display = "none";
+          document.getElementById("form-cliente").style.display = "block";
+        } else {
+          document.getElementById("mensaje-carga").innerText = "❌ El enlace expiró o es inválido.";
+        }
+      } catch (err) {
+        document.getElementById("mensaje-carga").innerText = "Error de conexión con el servidor.";
       }
-    } catch (e) {
-      alert("Error de conexión al enviar el formulario.");
-      btn.innerText = "Confirmar Datos";
-      btn.disabled = false;
     }
-  }
 
-  inicializar();
-</script>
+    async function cargarBaseDatos() {
+      try {
+        const res = await fetch(API_URL, { method: "GET", redirect: "follow" });
+        const data = await res.json();
+
+        dbUbigeo = data.ubigeo || [];
+        dbClientes = data.clientes || [];
+        dbShalom = data.shalom || [];
+
+        poblarDepartamentos();
+        buscarYCompletarCliente();
+      } catch (e) {
+        console.error("Error al cargar datos:", e);
+      }
+    }
+
+    function buscarYCompletarCliente() {
+      if (!celularCliente || dbClientes.length === 0) return;
+
+      const telNorm = normalizarTelefono(celularCliente);
+      const cliente = dbClientes.find(c => {
+        let telSheet = "";
+        Object.keys(c).forEach(k => {
+          if (k.includes("tel") || k.includes("cel") || k.includes("num") || k.includes("Celular")) {
+            telSheet = c[k];
+          }
+        });
+        return telNorm && normalizarTelefono(telSheet) === telNorm;
+      });
+
+      if (cliente) {
+        let distritoEncontrado = "";
+        let tipoEntregaGuardado = "";
+        let agenciaGuardada = "";
+        let sedeGuardada = "";
+
+        Object.keys(cliente).forEach(k => {
+          const key = normalizarTexto(k);
+          const val = cliente[k];
+
+          if (key.includes("dni") || key.includes("carnet")) document.getElementById("cli-dni").value = val;
+          if (key.includes("nom") || key.includes("apell")) document.getElementById("cli-nombre").value = val;
+          if (key.includes("dep")) {
+            document.getElementById("cli-dep").value = val;
+            poblarProvincias(val);
+          }
+          if (key.includes("prov")) {
+            document.getElementById("cli-prov").value = val;
+            poblarDistritos(document.getElementById("cli-dep").value, val);
+          }
+          if (key.includes("dist")) {
+            document.getElementById("cli-dist").value = val;
+            distritoEncontrado = val;
+          }
+          if (key.includes("entrega")) tipoEntregaGuardado = val;
+          if (key.includes("agencia")) agenciaGuardada = val;
+          if (key.includes("sede") || key.includes("dir")) sedeGuardada = val;
+        });
+
+        actualizarTipoEntregaSegunDistrito(distritoEncontrado, tipoEntregaGuardado);
+        gestionarVisibilidadAgencia(tipoEntregaGuardado || document.getElementById("cli-tipo-entrega").value, agenciaGuardada, sedeGuardada);
+      }
+    }
+
+    function poblarDepartamentos() {
+      const selDep = document.getElementById("cli-dep");
+      const departamentos = [...new Set(
+        dbUbigeo
+          .map(i => String(i.departamento || i.DEPARTAMENTO || "").trim())
+          .filter(d => d !== "" && !d.toUpperCase().includes("DEPARTAMEN"))
+      )].sort();
+
+      let html = '<option value="">Seleccione Departamento</option>';
+      departamentos.forEach(d => html += `<option value="${d}">${d}</option>`);
+      selDep.innerHTML = html;
+    }
+
+    function poblarProvincias(dep) {
+      const selProv = document.getElementById("cli-prov");
+      const selDist = document.getElementById("cli-dist");
+      selProv.innerHTML = '<option value="">Seleccione Provincia</option>';
+      selDist.innerHTML = '<option value="">Seleccione Distrito</option>';
+
+      if (!dep) return;
+
+      const provincias = [...new Set(
+        dbUbigeo
+          .filter(i => normalizarTexto(i.departamento || i.DEPARTAMENTO) === normalizarTexto(dep))
+          .map(i => String(i.provincia || i.PROVINCIA || "").trim())
+          .filter(p => p !== "" && p.toUpperCase() !== "PROVINCIA")
+      )].sort();
+
+      let html = '<option value="">Seleccione Provincia</option>';
+      provincias.forEach(p => html += `<option value="${p}">${p}</option>`);
+      selProv.innerHTML = html;
+    }
+
+    function poblarDistritos(dep, prov) {
+      const selDist = document.getElementById("cli-dist");
+      selDist.innerHTML = '<option value="">Seleccione Distrito</option>';
+
+      if (!dep || !prov) return;
+
+      const distritos = [...new Set(
+        dbUbigeo
+          .filter(i => normalizarTexto(i.departamento || i.DEPARTAMENTO) === normalizarTexto(dep) &&
+                       normalizarTexto(i.provincia || i.PROVINCIA) === normalizarTexto(prov))
+          .map(i => String(i.distrito || i.DISTRITO || "").trim())
+          .filter(d => d !== "" && d.toUpperCase() !== "DISTRITO")
+      )].sort();
+
+      let html = '<option value="">Seleccione Distrito</option>';
+      distritos.forEach(d => html += `<option value="${d}">${d}</option>`);
+      selDist.innerHTML = html;
+    }
+
+    function actualizarTipoEntregaSegunDistrito(distritoVal, tipoEntregaGuardado = "") {
+      const selEntrega = document.getElementById("cli-tipo-entrega");
+      const distNorm = normalizarTexto(distritoVal);
+
+      if (distNorm === "chimbote" || distNorm === "nuevo chimbote") {
+        selEntrega.innerHTML = `
+          <option value="Recojo en local">Recojo en local</option>
+          <option value="Delivery">Delivery</option>
+        `;
+      } else {
+        selEntrega.innerHTML = `<option value="Agencia">Agencia</option>`;
+      }
+
+      if (tipoEntregaGuardado && Array.from(selEntrega.options).some(o => o.value === tipoEntregaGuardado)) {
+        selEntrega.value = tipoEntregaGuardado;
+      }
+      gestionarVisibilidadAgencia(selEntrega.value);
+    }
+
+    function gestionarVisibilidadAgencia(tipoEntregaVal, agenciaGuardada = "", sedeGuardada = "") {
+      const containerAgencia = document.getElementById("cli-container-agencia");
+      const selAgencia = document.getElementById("cli-agencia");
+
+      if (tipoEntregaVal === "Agencia") {
+        containerAgencia.style.display = "block";
+        if (agenciaGuardada) selAgencia.value = agenciaGuardada;
+        actualizarCampoSedeDireccion(selAgencia.value, sedeGuardada);
+      } else {
+        containerAgencia.style.display = "none";
+        selAgencia.value = "Shalom";
+        actualizarCampoSedeDireccion("", sedeGuardada);
+      }
+    }
+
+    function actualizarCampoSedeDireccion(agenciaVal, sedeGuardada = "") {
+      const containerSede = document.getElementById("cli-container-sede");
+      const distNorm = normalizarTexto(document.getElementById("cli-dist").value);
+
+      if (agenciaVal === "Shalom") {
+        const sedes = dbShalom.filter(s => {
+          let dSheet = "";
+          Object.keys(s).forEach(k => { if (normalizarTexto(k).includes("distrito")) dSheet = s[k]; });
+          return normalizarTexto(dSheet) === distNorm;
+        });
+
+        if (sedes.length > 0) {
+          let opts = '<option value="">Seleccione Sede Shalom</option>';
+          sedes.forEach(s => {
+            let nSede = "";
+            Object.keys(s).forEach(k => { if (normalizarTexto(k).includes("sede")) nSede = s[k]; });
+            if (nSede) opts += `<option value="${nSede}">${nSede}</option>`;
+          });
+
+          containerSede.innerHTML = `
+            <label>Sede/Dirección:</label>
+            <select id="cli-direccion-sede" required>${opts}</select>
+          `;
+          if (sedeGuardada) document.getElementById("cli-direccion-sede").value = sedeGuardada;
+          return;
+        } else {
+          containerSede.innerHTML = `
+            <label>Sede/Dirección:</label>
+            <input type="text" id="cli-direccion-sede" value="Sin sede" disabled>
+          `;
+          return;
+        }
+      }
+
+      containerSede.innerHTML = `
+        <label>Sede/Dirección:</label>
+        <input type="text" id="cli-direccion-sede" placeholder="Dirección o punto de entrega" value="${sedeGuardada}" required>
+      `;
+    }
+
+    // Eventos de selección
+    document.getElementById("cli-dep").addEventListener("change", (e) => {
+      poblarProvincias(e.target.value);
+      actualizarTipoEntregaSegunDistrito("");
+    });
+
+    document.getElementById("cli-prov").addEventListener("change", (e) => {
+      poblarDistritos(document.getElementById("cli-dep").value, e.target.value);
+      actualizarTipoEntregaSegunDistrito("");
+    });
+
+    document.getElementById("cli-dist").addEventListener("change", (e) => {
+      actualizarTipoEntregaSegunDistrito(e.target.value);
+      actualizarCampoSedeDireccion(document.getElementById("cli-agencia").value);
+    });
+
+    document.getElementById("cli-tipo-entrega").addEventListener("change", (e) => {
+      gestionarVisibilidadAgencia(e.target.value);
+    });
+
+    document.getElementById("cli-agencia").addEventListener("change", (e) => {
+      actualizarCampoSedeDireccion(e.target.value);
+    });
+
+    // Guardar cambios
+    document.getElementById("form-cliente").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const btn = document.getElementById("btn-guardar");
+      btn.innerText = "Enviando...";
+      btn.disabled = true;
+
+      const tipoEntrega = document.getElementById("cli-tipo-entrega").value;
+      const payload = {
+        telefono: celularCliente,
+        dni: document.getElementById("cli-dni").value,
+        nombre: document.getElementById("cli-nombre").value,
+        departamento: document.getElementById("cli-dep").value,
+        provincia: document.getElementById("cli-prov").value,
+        distrito: document.getElementById("cli-dist").value,
+        tipoEntrega: tipoEntrega,
+        agencia: tipoEntrega === "Agencia" ? document.getElementById("cli-agencia").value : "",
+        direccionSede: document.getElementById("cli-direccion-sede").value
+      };
+
+      try {
+        const res = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
+        const resJson = await res.json();
+
+        alert("¡Datos guardados con éxito!");
+      } catch (err) {
+        alert("Ocurrió un error al guardar tus datos.");
+      } finally {
+        btn.innerText = "💾 Guardar Mis Datos";
+        btn.disabled = false;
+      }
+    });
+
+    window.onload = inicializar;
+  </script>
 </body>
 </html>
