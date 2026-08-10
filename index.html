@@ -76,17 +76,18 @@
     #mensaje-carga {
       text-align: center;
       font-size: 14px;
-      color: #666;
+      color: #555;
       margin-bottom: 10px;
+      line-height: 1.5;
     }
   </style>
 </head>
 <body>
 
   <div class="card">
-    <h2>📦 Datos para Envío</h2>
+    <h2>📦 Registro de Envío</h2>
     <hr>
-    <div id="mensaje-carga">Cargando datos...</div>
+    <div id="mensaje-carga">Verificando enlace...</div>
 
     <form id="form-cliente" style="display:none;">
       <label>Celular:</label>
@@ -140,7 +141,6 @@
     const API_URL = "https://script.google.com/macros/s/AKfycbw3L8PHJ4teJL1aOvpGNdFBnz_STLvwXjuLQaAV2tFl-Jy1tVI-RbRc5th2SbP7eAqQog/exec";
 
     let dbUbigeo = [];
-    let dbClientes = [];
     let dbShalom = [];
     let celularCliente = "";
 
@@ -149,37 +149,35 @@
       return String(txt).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
     }
 
-    function normalizarTelefono(num) {
-      if (!num) return "";
-      const soloDigitos = String(num).replace(/\D/g, "");
-      return soloDigitos.length >= 9 ? soloDigitos.slice(-9) : soloDigitos;
-    }
-
     async function inicializar() {
       const urlParams = new URLSearchParams(window.location.search);
       const token = urlParams.get("token");
 
       if (!token) {
-        document.getElementById("mensaje-carga").innerText = "❌ Enlace no válido. Solicite un nuevo link.";
+        document.getElementById("mensaje-carga").innerHTML = "❌ <b>Enlace inválido.</b>";
         return;
       }
 
       try {
-        const res = await fetch(`${API_URL}?action=validar_token&token=${encodeURIComponent(token)}`);
-        const data = await res.json();
+        celularCliente = atob(token);
 
-        if (data.status === "success" && data.celular) {
-          celularCliente = data.celular;
-          document.getElementById("cli-telefono").value = celularCliente;
-          await cargarBaseDatos();
-          
-          document.getElementById("mensaje-carga").style.display = "none";
-          document.getElementById("form-cliente").style.display = "block";
-        } else {
-          document.getElementById("mensaje-carga").innerText = "❌ El enlace expiró o es inválido.";
+        // Verificar si el celular ya existe registrado
+        const resVal = await fetch(`${API_URL}?action=validar_link&cel=${encodeURIComponent(celularCliente)}`);
+        const dataVal = await resVal.json();
+
+        if (dataVal.usado) {
+          document.getElementById("mensaje-carga").innerHTML = "⚠️ <b>Este enlace ya fue utilizado y se encuentra deshabilitado.</b>";
+          return;
         }
+
+        document.getElementById("cli-telefono").value = celularCliente;
+        await cargarBaseDatos();
+
+        document.getElementById("mensaje-carga").style.display = "none";
+        document.getElementById("form-cliente").style.display = "block";
+
       } catch (err) {
-        document.getElementById("mensaje-carga").innerText = "Error de conexión con el servidor.";
+        document.getElementById("mensaje-carga").innerHTML = "❌ <b>Error al procesar el enlace.</b>";
       }
     }
 
@@ -189,61 +187,11 @@
         const data = await res.json();
 
         dbUbigeo = data.ubigeo || [];
-        dbClientes = data.clientes || [];
         dbShalom = data.shalom || [];
 
         poblarDepartamentos();
-        buscarYCompletarCliente();
       } catch (e) {
-        console.error("Error al cargar datos:", e);
-      }
-    }
-
-    function buscarYCompletarCliente() {
-      if (!celularCliente || dbClientes.length === 0) return;
-
-      const telNorm = normalizarTelefono(celularCliente);
-      const cliente = dbClientes.find(c => {
-        let telSheet = "";
-        Object.keys(c).forEach(k => {
-          if (k.includes("tel") || k.includes("cel") || k.includes("num") || k.includes("Celular")) {
-            telSheet = c[k];
-          }
-        });
-        return telNorm && normalizarTelefono(telSheet) === telNorm;
-      });
-
-      if (cliente) {
-        let distritoEncontrado = "";
-        let tipoEntregaGuardado = "";
-        let agenciaGuardada = "";
-        let sedeGuardada = "";
-
-        Object.keys(cliente).forEach(k => {
-          const key = normalizarTexto(k);
-          const val = cliente[k];
-
-          if (key.includes("dni") || key.includes("carnet")) document.getElementById("cli-dni").value = val;
-          if (key.includes("nom") || key.includes("apell")) document.getElementById("cli-nombre").value = val;
-          if (key.includes("dep")) {
-            document.getElementById("cli-dep").value = val;
-            poblarProvincias(val);
-          }
-          if (key.includes("prov")) {
-            document.getElementById("cli-prov").value = val;
-            poblarDistritos(document.getElementById("cli-dep").value, val);
-          }
-          if (key.includes("dist")) {
-            document.getElementById("cli-dist").value = val;
-            distritoEncontrado = val;
-          }
-          if (key.includes("entrega")) tipoEntregaGuardado = val;
-          if (key.includes("agencia")) agenciaGuardada = val;
-          if (key.includes("sede") || key.includes("dir")) sedeGuardada = val;
-        });
-
-        actualizarTipoEntregaSegunDistrito(distritoEncontrado, tipoEntregaGuardado);
-        gestionarVisibilidadAgencia(tipoEntregaGuardado || document.getElementById("cli-tipo-entrega").value, agenciaGuardada, sedeGuardada);
+        console.error("Error al cargar ubigeos:", e);
       }
     }
 
@@ -299,7 +247,7 @@
       selDist.innerHTML = html;
     }
 
-    function actualizarTipoEntregaSegunDistrito(distritoVal, tipoEntregaGuardado = "") {
+    function actualizarTipoEntregaSegunDistrito(distritoVal) {
       const selEntrega = document.getElementById("cli-tipo-entrega");
       const distNorm = normalizarTexto(distritoVal);
 
@@ -312,28 +260,23 @@
         selEntrega.innerHTML = `<option value="Agencia">Agencia</option>`;
       }
 
-      if (tipoEntregaGuardado && Array.from(selEntrega.options).some(o => o.value === tipoEntregaGuardado)) {
-        selEntrega.value = tipoEntregaGuardado;
-      }
       gestionarVisibilidadAgencia(selEntrega.value);
     }
 
-    function gestionarVisibilidadAgencia(tipoEntregaVal, agenciaGuardada = "", sedeGuardada = "") {
+    function gestionarVisibilidadAgencia(tipoEntregaVal) {
       const containerAgencia = document.getElementById("cli-container-agencia");
       const selAgencia = document.getElementById("cli-agencia");
 
       if (tipoEntregaVal === "Agencia") {
         containerAgencia.style.display = "block";
-        if (agenciaGuardada) selAgencia.value = agenciaGuardada;
-        actualizarCampoSedeDireccion(selAgencia.value, sedeGuardada);
+        actualizarCampoSedeDireccion(selAgencia.value);
       } else {
         containerAgencia.style.display = "none";
-        selAgencia.value = "Shalom";
-        actualizarCampoSedeDireccion("", sedeGuardada);
+        actualizarCampoSedeDireccion("");
       }
     }
 
-    function actualizarCampoSedeDireccion(agenciaVal, sedeGuardada = "") {
+    function actualizarCampoSedeDireccion(agenciaVal) {
       const containerSede = document.getElementById("cli-container-sede");
       const distNorm = normalizarTexto(document.getElementById("cli-dist").value);
 
@@ -356,7 +299,6 @@
             <label>Sede/Dirección:</label>
             <select id="cli-direccion-sede" required>${opts}</select>
           `;
-          if (sedeGuardada) document.getElementById("cli-direccion-sede").value = sedeGuardada;
           return;
         } else {
           containerSede.innerHTML = `
@@ -369,11 +311,11 @@
 
       containerSede.innerHTML = `
         <label>Sede/Dirección:</label>
-        <input type="text" id="cli-direccion-sede" placeholder="Dirección o punto de entrega" value="${sedeGuardada}" required>
+        <input type="text" id="cli-direccion-sede" placeholder="Dirección o punto de entrega" required>
       `;
     }
 
-    // Eventos de selección
+    // Eventos
     document.getElementById("cli-dep").addEventListener("change", (e) => {
       poblarProvincias(e.target.value);
       actualizarTipoEntregaSegunDistrito("");
@@ -386,7 +328,6 @@
 
     document.getElementById("cli-dist").addEventListener("change", (e) => {
       actualizarTipoEntregaSegunDistrito(e.target.value);
-      actualizarCampoSedeDireccion(document.getElementById("cli-agencia").value);
     });
 
     document.getElementById("cli-tipo-entrega").addEventListener("change", (e) => {
@@ -397,7 +338,7 @@
       actualizarCampoSedeDireccion(e.target.value);
     });
 
-    // Guardar cambios
+    // Envío del formulario
     document.getElementById("form-cliente").addEventListener("submit", async (e) => {
       e.preventDefault();
 
@@ -422,10 +363,17 @@
         const res = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
         const resJson = await res.json();
 
-        alert("¡Datos guardados con éxito!");
+        if (resJson.status === "success") {
+          document.getElementById("form-cliente").style.display = "none";
+          document.getElementById("mensaje-carga").style.display = "block";
+          document.getElementById("mensaje-carga").innerHTML = "✅ <b>¡Tus datos han sido registrados con éxito!</b><br>Gracias por completar la información.";
+        } else {
+          alert(resJson.message || "No se pudo registrar la información.");
+          btn.innerText = "💾 Guardar Mis Datos";
+          btn.disabled = false;
+        }
       } catch (err) {
-        alert("Ocurrió un error al guardar tus datos.");
-      } finally {
+        alert("Ocurrió un error al conectar con el servidor.");
         btn.innerText = "💾 Guardar Mis Datos";
         btn.disabled = false;
       }
