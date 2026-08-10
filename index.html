@@ -109,6 +109,7 @@
         <select id="tipo_entrega" name="tipo_entrega">
           <option value="Agencia">Agencia</option>
           <option value="Domicilio">Domicilio</option>
+          <option value="Recojo en local">Recojo en local</option>
         </select>
       </div>
 
@@ -127,7 +128,6 @@
     let dbUbigeo = [];
     let dbClientes = [];
 
-    // 1. Funciones auxiliares
     function normalizarTexto(txt) {
       if (!txt) return "";
       return String(txt).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
@@ -136,11 +136,9 @@
     function normalizarTelefono(num) {
       if (!num) return "";
       const soloDigitos = String(num).replace(/\D/g, "");
-      // Retorna siempre con prefijo 51 seguido de los últimos 9 dígitos
       return soloDigitos.length >= 9 ? "51" + soloDigitos.slice(-9) : soloDigitos;
     }
 
-    // 2. Extraer celular con prefijo 51 desde el Token
     function obtenerCelularDesdeToken() {
       const urlParams = new URLSearchParams(window.location.search);
       const token = urlParams.get('token');
@@ -157,7 +155,6 @@
       }
     }
 
-    // 3. Cargar base de datos desde Apps Script
     async function cargarBaseDatosWeb() {
       try {
         const res = await fetch(API_URL, { method: "GET", redirect: "follow" });
@@ -172,7 +169,6 @@
       }
     }
 
-    // 4. Lógica para Selects de Ubigeo
     function poblarDepartamentosWeb() {
       const selDep = document.getElementById("departamento");
       if (!selDep || dbUbigeo.length === 0) return;
@@ -238,7 +234,6 @@
       selDist.innerHTML = html;
     }
 
-    // 5. Autocompletar datos si el cliente ya existe
     function autocompletarDatosCliente(celular) {
       if (!celular || dbClientes.length === 0) return;
 
@@ -298,7 +293,6 @@
       }
     }
 
-    // 6. Enviar Formulario a Google Sheets
     async function guardarDatosFormulario(e) {
       e.preventDefault();
 
@@ -306,11 +300,8 @@
       btnGuardar.disabled = true;
       btnGuardar.textContent = "⏳ Guardando datos...";
 
-      const rawCelular = document.getElementById("celular").value;
-      const celularCon51 = normalizarTelefono(rawCelular);
-
       const payload = {
-        telefono: celularCon51,
+        telefono: document.getElementById("celular").value,
         dni: document.getElementById("dni").value,
         nombre: document.getElementById("nombre").value,
         departamento: document.getElementById("departamento").value,
@@ -321,15 +312,24 @@
       };
 
       try {
+        // Se envía usando URLSearchParams para garantizar la recepción en Google Apps Script
+        const formData = new URLSearchParams();
+        formData.append("data", JSON.stringify(payload));
+
         await fetch(API_URL, {
           method: "POST",
           mode: "no-cors",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+          },
+          body: formData.toString()
         });
 
-        alert("¡Datos guardados con éxito!");
         btnGuardar.textContent = "✅ Guardado Correctamente";
+        setTimeout(() => {
+          btnGuardar.disabled = false;
+          btnGuardar.textContent = "💾 Guardar Mis Datos";
+        }, 3000);
       } catch (err) {
         console.error("Error al guardar:", err);
         alert("Ocurrió un error al guardar los datos.");
@@ -338,7 +338,6 @@
       }
     }
 
-    // 7. Configurar eventos de cambio en Ubigeo y Guardado
     function configurarEventos() {
       const selDep = document.getElementById("departamento");
       const selProv = document.getElementById("provincia");
@@ -361,7 +360,6 @@
       }
     }
 
-    // 8. Inicializar al cargar la página
     document.addEventListener("DOMContentLoaded", async () => {
       const celularCon51 = obtenerCelularDesdeToken();
       const inputCelular = document.getElementById("celular");
