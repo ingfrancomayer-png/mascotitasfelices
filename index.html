@@ -136,10 +136,11 @@
     function normalizarTelefono(num) {
       if (!num) return "";
       const soloDigitos = String(num).replace(/\D/g, "");
-      return soloDigitos.length >= 9 ? soloDigitos.slice(-9) : soloDigitos;
+      // Retorna siempre con prefijo 51 seguido de los últimos 9 dígitos
+      return soloDigitos.length >= 9 ? "51" + soloDigitos.slice(-9) : soloDigitos;
     }
 
-    // 2. Extraer solo celular limpio (sin _timestamp) del Token
+    // 2. Extraer celular con prefijo 51 desde el Token
     function obtenerCelularDesdeToken() {
       const urlParams = new URLSearchParams(window.location.search);
       const token = urlParams.get('token');
@@ -149,7 +150,7 @@
       try {
         const rawData = atob(token);
         const celularLimpio = rawData.split('_')[0].replace(/\D/g, "");
-        return celularLimpio.length >= 9 ? celularLimpio.slice(-9) : celularLimpio;
+        return celularLimpio.length >= 9 ? "51" + celularLimpio.slice(-9) : celularLimpio;
       } catch (e) {
         console.error("Error al decodificar token:", e);
         return "";
@@ -305,8 +306,11 @@
       btnGuardar.disabled = true;
       btnGuardar.textContent = "⏳ Guardando datos...";
 
+      const rawCelular = document.getElementById("celular").value;
+      const celularCon51 = normalizarTelefono(rawCelular);
+
       const payload = {
-        telefono: document.getElementById("celular").value,
+        telefono: celularCon51,
         dni: document.getElementById("dni").value,
         nombre: document.getElementById("nombre").value,
         departamento: document.getElementById("departamento").value,
@@ -359,18 +363,18 @@
 
     // 8. Inicializar al cargar la página
     document.addEventListener("DOMContentLoaded", async () => {
-      const celularLimpio = obtenerCelularDesdeToken();
+      const celularCon51 = obtenerCelularDesdeToken();
       const inputCelular = document.getElementById("celular");
 
       if (inputCelular) {
-        inputCelular.value = celularLimpio;
+        inputCelular.value = celularCon51;
       }
 
       configurarEventos();
       await cargarBaseDatosWeb();
 
-      if (celularLimpio) {
-        autocompletarDatosCliente(celularLimpio);
+      if (celularCon51) {
+        autocompletarDatosCliente(celularCon51);
       }
     });
   </script>
