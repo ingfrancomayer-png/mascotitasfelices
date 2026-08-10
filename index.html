@@ -3,122 +3,241 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Registro de Datos - Mascotitas Felices</title>
+  <title>Confirmación de Datos de Envío</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f6f9;
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --focus-ring: rgba(37, 99, 235, 0.2);
+    }
+
+    * {
+      box-sizing: border-box;
       margin: 0;
-      padding: 20px;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    body {
+      background: var(--bg-gradient);
+      min-height: 100vh;
       display: flex;
       justify-content: center;
+      align-items: center;
+      padding: 20px 12px;
     }
-    .container {
-      background: #ffffff;
-      padding: 25px;
-      border-radius: 8px;
-      max-width: 450px;
+
+    .card {
+      background: var(--card-bg);
       width: 100%;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      max-width: 480px;
+      border-radius: 20px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+      animation: fadeIn 0.4s ease-out;
     }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-header {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      color: white;
+      padding: 28px 24px;
+      text-align: center;
+    }
+
+    .card-header h2 {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+    }
+
+    .card-header p {
+      font-size: 13px;
+      color: #93c5fd;
+      font-weight: 500;
+    }
+
+    .card-body {
+      padding: 24px;
+    }
+
     .form-group {
-      margin-bottom: 15px;
+      margin-bottom: 18px;
     }
+
     label {
       display: block;
-      font-weight: bold;
-      margin-bottom: 5px;
-      color: #333;
-      font-size: 14px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
     }
+
     input, select {
       width: 100%;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      box-sizing: border-box;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border-color);
+      border-radius: 10px;
       font-size: 14px;
+      color: var(--text-main);
+      background-color: #f8fafc;
+      transition: all 0.2s ease;
+      outline: none;
     }
+
+    input:focus, select:focus {
+      border-color: var(--primary);
+      background-color: #ffffff;
+      box-shadow: 0 0 0 4px var(--focus-ring);
+    }
+
     input[readonly] {
-      background-color: #e9ecef;
-      color: #495057;
+      background-color: #f1f5f9;
+      color: #64748b;
+      border-color: #e2e8f0;
+      cursor: not-allowed;
+      font-weight: 600;
     }
-    button {
+
+    .hidden {
+      display: none !important;
+    }
+
+    .btn-submit {
       width: 100%;
-      background-color: #25d366;
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
       color: white;
       border: none;
-      padding: 12px;
-      font-size: 16px;
-      font-weight: bold;
-      border-radius: 5px;
+      padding: 15px;
+      font-size: 15px;
+      font-weight: 700;
+      border-radius: 12px;
       cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
       margin-top: 10px;
     }
-    button:hover {
-      background-color: #1eb857;
+
+    .btn-submit:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
     }
-    button:disabled {
-      background-color: #cccccc;
+
+    .btn-submit:disabled {
+      background: #cbd5e1;
+      box-shadow: none;
       cursor: not-allowed;
+      transform: none;
+    }
+
+    .badge-info {
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 4px;
+      display: block;
     }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <form id="form-registro">
-      <div class="form-group">
-        <label for="celular">Celular:</label>
-        <input type="text" id="celular" name="celular" readonly placeholder="Cargando celular...">
-      </div>
+  <div class="card">
+    <div class="card-header">
+      <h2>📦 Datos de Entrega</h2>
+      <p>Confirma tus datos para procesar el envío</p>
+    </div>
 
-      <div class="form-group">
-        <label for="dni">DNI / Carnet de extranjería:</label>
-        <input type="text" id="dni" name="dni" placeholder="Ingrese su DNI o carnet" required>
-      </div>
+    <div class="card-body">
+      <form id="form-registro">
+        <div class="form-group">
+          <label for="celular">Celular de Contacto</label>
+          <input type="text" id="celular" name="celular" readonly placeholder="Cargando...">
+        </div>
 
-      <div class="form-group">
-        <label for="nombre">Apellidos y Nombres:</label>
-        <input type="text" id="nombre" name="nombre" placeholder="Ingrese su nombre completo" required>
-      </div>
+        <div class="form-group">
+          <label for="dni">DNI / Carnet de Extranjería</label>
+          <input type="text" id="dni" name="dni" placeholder="Ingrese su documento" required>
+        </div>
 
-      <div class="form-group">
-        <label for="departamento">Departamento:</label>
-        <select id="departamento" name="departamento" required>
-          <option value="">Seleccione Departamento</option>
-        </select>
-      </div>
+        <div class="form-group">
+          <label for="nombre">Apellidos y Nombres</label>
+          <input type="text" id="nombre" name="nombre" placeholder="Ingrese su nombre completo" required>
+        </div>
 
-      <div class="form-group">
-        <label for="provincia">Provincia:</label>
-        <select id="provincia" name="provincia" required>
-          <option value="">Seleccione Provincia</option>
-        </select>
-      </div>
+        <div class="form-group">
+          <label for="departamento">Departamento</label>
+          <select id="departamento" name="departamento" required>
+            <option value="">Seleccione Departamento</option>
+          </select>
+        </div>
 
-      <div class="form-group">
-        <label for="distrito">Distrito:</label>
-        <select id="distrito" name="distrito" required>
-          <option value="">Seleccione Distrito</option>
-        </select>
-      </div>
+        <div class="form-group">
+          <label for="provincia">Provincia</label>
+          <select id="provincia" name="provincia" required>
+            <option value="">Seleccione Provincia</option>
+          </select>
+        </div>
 
-      <div class="form-group">
-        <label for="tipo_entrega">Tipo de entrega:</label>
-        <select id="tipo_entrega" name="tipo_entrega">
-          <option value="Agencia">Agencia</option>
-          <option value="Domicilio">Domicilio</option>
-        </select>
-      </div>
+        <div class="form-group">
+          <label for="distrito">Distrito</label>
+          <select id="distrito" name="distrito" required>
+            <option value="">Seleccione Distrito</option>
+          </select>
+        </div>
 
-      <div class="form-group">
-        <label for="direccion">Sede/Dirección:</label>
-        <input type="text" id="direccion" name="direccion" placeholder="Dirección o punto de entrega" required>
-      </div>
+        <div class="form-group">
+          <label for="tipo_entrega">Tipo de Entrega</label>
+          <select id="tipo_entrega" name="tipo_entrega" required>
+            <option value="">Seleccione Tipo</option>
+          </select>
+        </div>
 
-      <button type="submit" id="btn-guardar">💾 Guardar Mis Datos</button>
-    </form>
+        <!-- SECCIÓN AGENCIA (SOLO SI NO ES CHIMBOTE / NUEVO CHIMBOTE) -->
+        <div id="wrapper-agencia" class="form-group hidden">
+          <label for="agencia">Agencia de Envío</label>
+          <select id="agencia" name="agencia">
+            <option value="">Seleccione Agencia</option>
+            <option value="Shalom">Shalom</option>
+            <option value="Olva">Olva Courier</option>
+            <option value="Otros">Otra Agencia</option>
+          </select>
+        </div>
+
+        <!-- CAMPO AGENCIA MANUAL (SI SELECCIONA OTROS) -->
+        <div id="wrapper-agencia-otra" class="form-group hidden">
+          <label for="agencia_otra">Nombre de la Agencia</label>
+          <input type="text" id="agencia_otra" placeholder="Escriba el nombre de la agencia">
+        </div>
+
+        <!-- CAMPO SEDE DESPLEGABLE (SI SELECCIONA SHALOM) -->
+        <div id="wrapper-sede-select" class="form-group hidden">
+          <label for="sede_select">Sede Shalom</label>
+          <select id="sede_select">
+            <option value="">Seleccione Sede</option>
+          </select>
+        </div>
+
+        <!-- CAMPO SEDE / DIRECCIÓN MANUAL (DELIVERY / OLVA / OTROS) -->
+        <div id="wrapper-sede-manual" class="form-group">
+          <label id="label-sede-manual" for="direccion_manual">Sede / Dirección</label>
+          <input type="text" id="direccion_manual" placeholder="Ingrese dirección o sede de entrega">
+        </div>
+
+        <button type="submit" id="btn-guardar" class="btn-submit">Confirmar y Guardar Datos</button>
+      </form>
+    </div>
   </div>
 
   <script>
@@ -126,6 +245,7 @@
 
     let dbUbigeo = [];
     let dbClientes = [];
+    let dbShalom = [];
 
     function normalizarTexto(txt) {
       if (!txt) return "";
@@ -141,37 +261,32 @@
     function obtenerCelularDesdeToken() {
       const urlParams = new URLSearchParams(window.location.search);
       const token = urlParams.get('token');
-
       if (!token) return "";
-
       try {
         const rawData = atob(token);
         const celularLimpio = rawData.split('_')[0].replace(/\D/g, "");
         return celularLimpio.length >= 9 ? celularLimpio.slice(-9) : celularLimpio;
       } catch (e) {
-        console.error("Error al decodificar token:", e);
         return "";
       }
     }
 
-    async function cargarBaseDatosWeb() {
+    async function cargarBaseDatos() {
       try {
         const res = await fetch(API_URL, { method: "GET", redirect: "follow" });
         const data = await res.json();
-        
         dbUbigeo = data.ubigeo || [];
         dbClientes = data.clientes || [];
+        dbShalom = data.shalom || [];
 
-        poblarDepartamentosWeb();
+        poblarDepartamentos();
       } catch (err) {
-        console.error("Error al conectar con Google Sheets:", err);
+        console.error("Error al cargar datos:", err);
       }
     }
 
-    function poblarDepartamentosWeb() {
+    function poblarDepartamentos() {
       const selDep = document.getElementById("departamento");
-      if (!selDep || dbUbigeo.length === 0) return;
-
       const departamentos = [...new Set(
         dbUbigeo
           .map(item => String(item.departamento || item.DEPARTAMENTO || "").trim())
@@ -179,17 +294,13 @@
       )].sort();
 
       let html = '<option value="">Seleccione Departamento</option>';
-      departamentos.forEach(dep => {
-        html += `<option value="${dep}">${dep}</option>`;
-      });
+      departamentos.forEach(dep => html += `<option value="${dep}">${dep}</option>`);
       selDep.innerHTML = html;
     }
 
-    function poblarProvinciasWeb(depSeleccionado) {
+    function poblarProvincias(depSeleccionado) {
       const selProv = document.getElementById("provincia");
       const selDist = document.getElementById("distrito");
-      if (!selProv || !selDist) return;
-
       selProv.innerHTML = '<option value="">Seleccione Provincia</option>';
       selDist.innerHTML = '<option value="">Seleccione Distrito</option>';
       if (!depSeleccionado) return;
@@ -198,20 +309,16 @@
         dbUbigeo
           .filter(item => normalizarTexto(item.departamento || item.DEPARTAMENTO) === normalizarTexto(depSeleccionado))
           .map(item => String(item.provincia || item.PROVINCIA || "").trim())
-          .filter(prov => prov !== "" && prov.toUpperCase() !== "PROVINCIA")
+          .filter(p => p !== "" && p.toUpperCase() !== "PROVINCIA")
       )].sort();
 
       let html = '<option value="">Seleccione Provincia</option>';
-      provincias.forEach(prov => {
-        html += `<option value="${prov}">${prov}</option>`;
-      });
+      provincias.forEach(p => html += `<option value="${p}">${p}</option>`);
       selProv.innerHTML = html;
     }
 
-    function poblarDistritosWeb(depSeleccionado, provSeleccionada) {
+    function poblarDistritos(depSeleccionado, provSeleccionada) {
       const selDist = document.getElementById("distrito");
-      if (!selDist) return;
-
       selDist.innerHTML = '<option value="">Seleccione Distrito</option>';
       if (!depSeleccionado || !provSeleccionada) return;
 
@@ -227,77 +334,137 @@
       )].sort();
 
       let html = '<option value="">Seleccione Distrito</option>';
-      distritos.forEach(dist => {
-        html += `<option value="${dist}">${dist}</option>`;
-      });
+      distritos.forEach(dist => html += `<option value="${dist}">${dist}</option>`);
       selDist.innerHTML = html;
     }
 
-    function autocompletarDatosCliente(celular) {
-      if (!celular || dbClientes.length === 0) return;
+    function evaluarReglasDistrito() {
+      const distrito = document.getElementById("distrito").value;
+      const distNorm = normalizarTexto(distrito);
+      const selTipo = document.getElementById("tipo_entrega");
+      const wrapperAgencia = document.getElementById("wrapper-agencia");
 
+      if (distNorm === "chimbote" || distNorm === "nuevo chimbote") {
+        selTipo.innerHTML = `
+          <option value="">Seleccione Tipo</option>
+          <option value="Recojo en local">Recojo en local</option>
+          <option value="Delivery">Delivery</option>
+        `;
+        wrapperAgencia.classList.add("hidden");
+        document.getElementById("agencia").value = "";
+        evaluarReglasAgencia();
+      } else if (distNorm !== "") {
+        selTipo.innerHTML = `<option value="Agencia">Agencia</option>`;
+        selTipo.value = "Agencia";
+        wrapperAgencia.classList.remove("hidden");
+        evaluarReglasAgencia();
+      } else {
+        selTipo.innerHTML = '<option value="">Seleccione Tipo</option>';
+        wrapperAgencia.classList.add("hidden");
+        evaluarReglasAgencia();
+      }
+    }
+
+    function evaluarReglasAgencia() {
+      const agencia = document.getElementById("agencia").value;
+      const distrito = document.getElementById("distrito").value;
+
+      const wrapperOtra = document.getElementById("wrapper-agencia-otra");
+      const wrapperSelectSede = document.getElementById("wrapper-sede-select");
+      const wrapperManualSede = document.getElementById("wrapper-sede-manual");
+      const labelManual = document.getElementById("label-sede-manual");
+
+      if (agencia === "Otros") {
+        wrapperOtra.classList.remove("hidden");
+      } else {
+        wrapperOtra.classList.add("hidden");
+        document.getElementById("agencia_otra").value = "";
+      }
+
+      if (agencia === "Shalom") {
+        wrapperSelectSede.classList.remove("hidden");
+        wrapperManualSede.classList.add("hidden");
+        poblarSedesShalom(distrito);
+      } else {
+        wrapperSelectSede.classList.add("hidden");
+        wrapperManualSede.classList.remove("hidden");
+        labelManual.textContent = agencia === "Olva" ? "Dirección / Sede de Olva" : "Dirección de Entrega";
+      }
+    }
+
+    function poblarSedesShalom(distrito) {
+      const selSede = document.getElementById("sede_select");
+      if (!distrito) {
+        selSede.innerHTML = '<option value="Sin sede registrada">Sin sede registrada</option>';
+        return;
+      }
+
+      const distNorm = normalizarTexto(distrito);
+      const sedes = dbShalom.filter(item => {
+        const distSheet = item.DISTRITO || item.distrito || "";
+        return normalizarTexto(distSheet) === distNorm;
+      }).map(item => String(item.SEDE || item.sede || "").trim()).filter(s => s !== "");
+
+      if (sedes.length > 0) {
+        let html = '<option value="">Seleccione Sede Shalom</option>';
+        sedes.forEach(s => html += `<option value="${s}">${s}</option>`);
+        selSede.innerHTML = html;
+      } else {
+        selSede.innerHTML = '<option value="Sin sede registrada">Sin sede registrada</option>';
+      }
+    }
+
+    function autocompletarCliente(celular) {
+      if (!celular || dbClientes.length === 0) return;
       const celBuscado = normalizarTelefono(celular);
 
-      const clienteEncontrado = dbClientes.find(c => {
-        let telSheet = "";
+      const cliente = dbClientes.find(c => {
+        let tel = "";
         Object.keys(c).forEach(k => {
-          if (k.toLowerCase().includes("tel") || k.toLowerCase().includes("cel") || k.toLowerCase().includes("num")) {
-            telSheet = c[k];
-          }
+          if (k.toLowerCase().includes("tel") || k.toLowerCase().includes("cel")) tel = c[k];
         });
-        return normalizarTelefono(telSheet) === celBuscado;
+        return normalizarTelefono(tel) === celBuscado;
       });
 
-      if (clienteEncontrado) {
-        Object.keys(clienteEncontrado).forEach(k => {
+      if (cliente) {
+        Object.keys(cliente).forEach(k => {
           const key = normalizarTexto(k);
-          const val = clienteEncontrado[k];
-
-          if (key.includes("dni") || key.includes("carnet")) {
-            const inputDni = document.getElementById("dni");
-            if (inputDni && val) inputDni.value = val;
-          }
-          if (key.includes("nom") || key.includes("apell")) {
-            const inputNom = document.getElementById("nombre");
-            if (inputNom && val) inputNom.value = val;
-          }
+          const val = cliente[k];
+          if (key.includes("dni")) document.getElementById("dni").value = val;
+          if (key.includes("nom")) document.getElementById("nombre").value = val;
           if (key.includes("dep")) {
-            const selDep = document.getElementById("departamento");
-            if (selDep && val) {
-              selDep.value = val;
-              poblarProvinciasWeb(val);
-            }
+            document.getElementById("departamento").value = val;
+            poblarProvincias(val);
           }
           if (key.includes("prov")) {
-            const selProv = document.getElementById("provincia");
-            if (selProv && val) {
-              selProv.value = val;
-              const selDep = document.getElementById("departamento");
-              poblarDistritosWeb(selDep ? selDep.value : "", val);
-            }
+            document.getElementById("provincia").value = val;
+            poblarDistritos(document.getElementById("departamento").value, val);
           }
           if (key.includes("dist")) {
-            const selDist = document.getElementById("distrito");
-            if (selDist && val) selDist.value = val;
-          }
-          if (key.includes("dir") || key.includes("sede")) {
-            const inputSede = document.getElementById("direccion");
-            if (inputSede && val) inputSede.value = val;
-          }
-          if (key.includes("entreg") || key.includes("tipo")) {
-            const selTipo = document.getElementById("tipo_entrega");
-            if (selTipo && val) selTipo.value = val;
+            document.getElementById("distrito").value = val;
+            evaluarReglasDistrito();
           }
         });
       }
     }
 
-    async function guardarDatosFormulario(e) {
+    async function guardarFormulario(e) {
       e.preventDefault();
+      const btn = document.getElementById("btn-guardar");
+      btn.disabled = true;
+      btn.textContent = "⏳ Guardando...";
 
-      const btnGuardar = document.getElementById("btn-guardar");
-      btnGuardar.disabled = true;
-      btnGuardar.textContent = "⏳ Guardando datos...";
+      const agenciaSel = document.getElementById("agencia").value;
+      const agenciaFinal = agenciaSel === "Otros" 
+        ? document.getElementById("agencia_otra").value 
+        : agenciaSel;
+
+      let sedeFinal = "";
+      if (agenciaSel === "Shalom") {
+        sedeFinal = document.getElementById("sede_select").value;
+      } else {
+        sedeFinal = document.getElementById("direccion_manual").value;
+      }
 
       const payload = {
         telefono: document.getElementById("celular").value,
@@ -307,7 +474,8 @@
         provincia: document.getElementById("provincia").value,
         distrito: document.getElementById("distrito").value,
         tipoEntrega: document.getElementById("tipo_entrega").value,
-        direccionSede: document.getElementById("direccion").value
+        agencia: agenciaFinal,
+        direccionSede: sedeFinal
       };
 
       try {
@@ -318,55 +486,30 @@
           body: JSON.stringify(payload)
         });
 
-        btnGuardar.textContent = "✅ Guardado / Actualizado";
+        btn.textContent = "✅ ¡Datos Actualizados!";
         setTimeout(() => {
-          btnGuardar.disabled = false;
-          btnGuardar.textContent = "💾 Guardar Mis Datos";
+          btn.disabled = false;
+          btn.textContent = "Confirmar y Guardar Datos";
         }, 3000);
       } catch (err) {
-        console.error("Error al guardar:", err);
-        alert("Ocurrió un error al intentar guardar.");
-        btnGuardar.disabled = false;
-        btnGuardar.textContent = "💾 Guardar Mis Datos";
-      }
-    }
-
-    function configurarEventos() {
-      const selDep = document.getElementById("departamento");
-      const selProv = document.getElementById("provincia");
-      const form = document.getElementById("form-registro");
-
-      if (selDep) {
-        selDep.addEventListener("change", () => {
-          poblarProvinciasWeb(selDep.value);
-        });
-      }
-
-      if (selProv) {
-        selProv.addEventListener("change", () => {
-          poblarDistritosWeb(selDep ? selDep.value : "", selProv.value);
-        });
-      }
-
-      if (form) {
-        form.addEventListener("submit", guardarDatosFormulario);
+        alert("Ocurrió un error al guardar los datos.");
+        btn.disabled = false;
+        btn.textContent = "Confirmar y Guardar Datos";
       }
     }
 
     document.addEventListener("DOMContentLoaded", async () => {
-      const celularLimpio = obtenerCelularDesdeToken();
-      const inputCelular = document.getElementById("celular");
+      const cel = obtenerCelularDesdeToken();
+      document.getElementById("celular").value = cel;
 
-      if (inputCelular) {
-        inputCelular.value = celularLimpio;
-      }
+      document.getElementById("departamento").addEventListener("change", (e) => poblarProvincias(e.target.value));
+      document.getElementById("provincia").addEventListener("change", (e) => poblarDistritos(document.getElementById("departamento").value, e.target.value));
+      document.getElementById("distrito").addEventListener("change", evaluarReglasDistrito);
+      document.getElementById("agencia").addEventListener("change", evaluarReglasAgencia);
+      document.getElementById("form-registro").addEventListener("submit", guardarFormulario);
 
-      configurarEventos();
-      await cargarBaseDatosWeb();
-
-      if (celularLimpio) {
-        autocompletarDatosCliente(celularLimpio);
-      }
+      await cargarBaseDatos();
+      if (cel) autocompletarCliente(cel);
     });
   </script>
 </body>
