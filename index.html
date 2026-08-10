@@ -1,385 +1,217 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Formulario de Envío</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f0f2f5;
-      margin: 0;
-      padding: 20px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      box-sizing: border-box;
-    }
-    .card {
-      background: #ffffff;
-      padding: 24px;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      width: 100%;
-      max-width: 420px;
-      box-sizing: border-box;
-    }
-    h2 {
-      margin-top: 0;
-      color: #008069;
-      font-size: 20px;
-      text-align: center;
-      margin-bottom: 15px;
-    }
-    hr {
-      border: 0;
-      border-top: 1px solid #e0e0e0;
-      margin-bottom: 15px;
-    }
-    label {
-      font-size: 13px;
-      font-weight: 600;
-      color: #333;
-      display: block;
-      margin-bottom: 4px;
-    }
-    input[type="text"], select {
-      width: 100%;
-      padding: 8px 10px;
-      margin-bottom: 12px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      box-sizing: border-box;
-      font-size: 14px;
-    }
-    input:disabled {
-      background-color: #e0e0e0;
-      color: #555;
-      cursor: not-allowed;
-    }
-    button {
-      width: 100%;
-      background-color: #25D366;
-      color: white;
-      border: none;
-      padding: 12px;
-      border-radius: 4px;
-      font-size: 15px;
-      font-weight: bold;
-      cursor: pointer;
-      margin-top: 8px;
-    }
-    button:hover {
-      background-color: #1ebc57;
-    }
-    #mensaje-carga {
-      text-align: center;
-      font-size: 14px;
-      color: #555;
-      margin-bottom: 10px;
-      line-height: 1.5;
-    }
-  </style>
-</head>
-<body>
+// ==========================================
+// CÓDIGO COMPLETO PARA TU FORMULARIO PÚBLICO WEB
+// ==========================================
 
-  <div class="card">
-    <h2>📦 Registro de Envío</h2>
-    <hr>
-    <div id="mensaje-carga">Verificando enlace...</div>
+const API_URL = "https://script.google.com/macros/s/AKfycbw3L8PHJ4teJL1aOvpGNdFBnz_STLvwXjuLQaAV2tFl-Jy1tVI-RbRc5th2SbP7eAqQog/exec";
 
-    <form id="form-cliente" style="display:none;">
-      <label>Celular:</label>
-      <input type="text" id="cli-telefono" disabled>
+let dbUbigeo = [];
+let dbClientes = [];
+let dbShalom = [];
 
-      <label>DNI / Carnet de extranjería:</label>
-      <input type="text" id="cli-dni" placeholder="Ingrese su DNI o carnet" required>
+// 1. Funciones Auxiliares de Normalización
+function normalizarTexto(txt) {
+  if (!txt) return "";
+  return String(txt)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+}
 
-      <label>Apellidos y Nombres:</label>
-      <input type="text" id="cli-nombre" placeholder="Ingrese su nombre completo" required>
+function normalizarTelefono(num) {
+  if (!num) return "";
+  const soloDigitos = String(num).replace(/\D/g, "");
+  return soloDigitos.length >= 9 ? soloDigitos.slice(-9) : soloDigitos;
+}
 
-      <label>Departamento:</label>
-      <select id="cli-dep" required>
-        <option value="">Seleccione Departamento</option>
-      </select>
+// 2. Extraer ÚNICAMENTE el celular limpio desde el Token de la URL
+function obtenerCelularDesdeToken() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const token = urlParams.get('token');
 
-      <label>Provincia:</label>
-      <select id="cli-prov" required>
-        <option value="">Seleccione Provincia</option>
-      </select>
+  if (!token) return "";
 
-      <label>Distrito:</label>
-      <select id="cli-dist" required>
-        <option value="">Seleccione Distrito</option>
-      </select>
+  try {
+    const rawData = atob(token); // Ejemplo: "903317718_1786339297140"
+    const celularLimpio = rawData.split('_')[0].replace(/\D/g, ""); // Extrae solo "903317718"
+    return celularLimpio.length >= 9 ? celularLimpio.slice(-9) : celularLimpio;
+  } catch (e) {
+    console.error("Error al decodificar token:", e);
+    return "";
+  }
+}
 
-      <label>Tipo de entrega:</label>
-      <select id="cli-tipo-entrega" required>
-        <option value="Agencia">Agencia</option>
-      </select>
+// 3. Cargar la base de datos completa de Google Sheets
+async function cargarBaseDatosWeb() {
+  try {
+    const res = await fetch(API_URL, { method: "GET", redirect: "follow" });
+    const data = await res.json();
+    
+    dbUbigeo = data.ubigeo || [];
+    dbClientes = data.clientes || [];
+    dbShalom = data.shalom || [];
 
-      <div id="cli-container-agencia" style="display:none;">
-        <label>Agencia:</label>
-        <select id="cli-agencia">
-          <option value="Shalom">Shalom</option>
-          <option value="Olva">Olva</option>
-          <option value="Otro">Otro</option>
-        </select>
-      </div>
+    poblarDepartamentosWeb();
+  } catch (err) {
+    console.error("Error al conectar con Google Sheets:", err);
+  }
+}
 
-      <div id="cli-container-sede">
-        <label>Sede/Dirección:</label>
-        <input type="text" id="cli-direccion-sede" placeholder="Dirección o punto de entrega" required>
-      </div>
+// 4. Poblar Listas Desplegables de Ubigeo
+function poblarDepartamentosWeb() {
+  const selDep = document.getElementById("crm-dep") || document.getElementById("departamento");
+  if (!selDep || dbUbigeo.length === 0) return;
 
-      <button type="submit" id="btn-guardar">💾 Guardar Mis Datos</button>
-    </form>
-  </div>
+  const departamentos = [...new Set(
+    dbUbigeo
+      .map(item => String(item.departamento || item.DEPARTAMENTO || "").trim())
+      .filter(dep => dep !== "" && !dep.toUpperCase().includes("DEPARTAMEN"))
+  )].sort();
 
-  <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbw3L8PHJ4teJL1aOvpGNdFBnz_STLvwXjuLQaAV2tFl-Jy1tVI-RbRc5th2SbP7eAqQog/exec";
+  let html = '<option value="">Seleccione Departamento</option>';
+  departamentos.forEach(dep => {
+    html += `<option value="${dep}">${dep}</option>`;
+  });
+  selDep.innerHTML = html;
+}
 
-    let dbUbigeo = [];
-    let dbShalom = [];
-    let celularCliente = "";
+function poblarProvinciasWeb(depSeleccionado) {
+  const selProv = document.getElementById("crm-prov") || document.getElementById("provincia");
+  const selDist = document.getElementById("crm-dist") || document.getElementById("distrito");
+  if (!selProv || !selDist) return;
 
-    function normalizarTexto(txt) {
-      if (!txt) return "";
-      return String(txt).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-    }
+  selProv.innerHTML = '<option value="">Seleccione Provincia</option>';
+  selDist.innerHTML = '<option value="">Seleccione Distrito</option>';
+  if (!depSeleccionado) return;
 
-    async function inicializar() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const token = urlParams.get("token");
+  const provincias = [...new Set(
+    dbUbigeo
+      .filter(item => normalizarTexto(item.departamento || item.DEPARTAMENTO) === normalizarTexto(depSeleccionado))
+      .map(item => String(item.provincia || item.PROVINCIA || "").trim())
+      .filter(prov => prov !== "" && prov.toUpperCase() !== "PROVINCIA")
+  )].sort();
 
-      if (!token) {
-        document.getElementById("mensaje-carga").innerHTML = "❌ <b>Enlace inválido.</b>";
-        return;
+  let html = '<option value="">Seleccione Provincia</option>';
+  provincias.forEach(prov => {
+    html += `<option value="${prov}">${prov}</option>`;
+  });
+  selProv.innerHTML = html;
+}
+
+function poblarDistritosWeb(depSeleccionado, provSeleccionada) {
+  const selDist = document.getElementById("crm-dist") || document.getElementById("distrito");
+  if (!selDist) return;
+
+  selDist.innerHTML = '<option value="">Seleccione Distrito</option>';
+  if (!depSeleccionado || !provSeleccionada) return;
+
+  const distritos = [...new Set(
+    dbUbigeo
+      .filter(item => {
+        const d = item.departamento || item.DEPARTAMENTO || "";
+        const p = item.provincia || item.PROVINCIA || "";
+        return normalizarTexto(d) === normalizarTexto(depSeleccionado) && normalizarTexto(p) === normalizarTexto(provSeleccionada);
+      })
+      .map(item => String(item.distrito || item.DISTRITO || "").trim())
+      .filter(dist => dist !== "" && dist.toUpperCase() !== "DISTRITO")
+  )].sort();
+
+  let html = '<option value="">Seleccione Distrito</option>';
+  distritos.forEach(dist => {
+    html += `<option value="${dist}">${dist}</option>`;
+  });
+  selDist.innerHTML = html;
+}
+
+// 5. Cargar y Autocompletar Información del Cliente Existente
+function autocompletarDatosCliente(celular) {
+  if (!celular || dbClientes.length === 0) return;
+
+  const celBuscado = normalizarTelefono(celular);
+
+  const clienteEncontrado = dbClientes.find(c => {
+    let telSheet = "";
+    Object.keys(c).forEach(k => {
+      if (k.toLowerCase().includes("tel") || k.toLowerCase().includes("cel") || k.toLowerCase().includes("num")) {
+        telSheet = c[k];
       }
+    });
+    return normalizarTelefono(telSheet) === celBuscado;
+  });
 
-      try {
-        celularCliente = atob(token);
+  if (clienteEncontrado) {
+    Object.keys(clienteEncontrado).forEach(k => {
+      const key = normalizarTexto(k);
+      const val = clienteEncontrado[k];
 
-        // Verificar si el celular ya existe registrado
-        const resVal = await fetch(`${API_URL}?action=validar_link&cel=${encodeURIComponent(celularCliente)}`);
-        const dataVal = await resVal.json();
-
-        if (dataVal.usado) {
-          document.getElementById("mensaje-carga").innerHTML = "⚠️ <b>Este enlace ya fue utilizado y se encuentra deshabilitado.</b>";
-          return;
-        }
-
-        document.getElementById("cli-telefono").value = celularCliente;
-        await cargarBaseDatos();
-
-        document.getElementById("mensaje-carga").style.display = "none";
-        document.getElementById("form-cliente").style.display = "block";
-
-      } catch (err) {
-        document.getElementById("mensaje-carga").innerHTML = "❌ <b>Error al procesar el enlace.</b>";
+      if (key.includes("dni") || key.includes("carnet")) {
+        const inputDni = document.getElementById("crm-dni") || document.getElementById("dni");
+        if (inputDni && val) inputDni.value = val;
       }
-    }
-
-    async function cargarBaseDatos() {
-      try {
-        const res = await fetch(API_URL, { method: "GET", redirect: "follow" });
-        const data = await res.json();
-
-        dbUbigeo = data.ubigeo || [];
-        dbShalom = data.shalom || [];
-
-        poblarDepartamentos();
-      } catch (e) {
-        console.error("Error al cargar ubigeos:", e);
+      if (key.includes("nom") || key.includes("apell")) {
+        const inputNom = document.getElementById("crm-nombre") || document.getElementById("nombre");
+        if (inputNom && val) inputNom.value = val;
       }
-    }
-
-    function poblarDepartamentos() {
-      const selDep = document.getElementById("cli-dep");
-      const departamentos = [...new Set(
-        dbUbigeo
-          .map(i => String(i.departamento || i.DEPARTAMENTO || "").trim())
-          .filter(d => d !== "" && !d.toUpperCase().includes("DEPARTAMEN"))
-      )].sort();
-
-      let html = '<option value="">Seleccione Departamento</option>';
-      departamentos.forEach(d => html += `<option value="${d}">${d}</option>`);
-      selDep.innerHTML = html;
-    }
-
-    function poblarProvincias(dep) {
-      const selProv = document.getElementById("cli-prov");
-      const selDist = document.getElementById("cli-dist");
-      selProv.innerHTML = '<option value="">Seleccione Provincia</option>';
-      selDist.innerHTML = '<option value="">Seleccione Distrito</option>';
-
-      if (!dep) return;
-
-      const provincias = [...new Set(
-        dbUbigeo
-          .filter(i => normalizarTexto(i.departamento || i.DEPARTAMENTO) === normalizarTexto(dep))
-          .map(i => String(i.provincia || i.PROVINCIA || "").trim())
-          .filter(p => p !== "" && p.toUpperCase() !== "PROVINCIA")
-      )].sort();
-
-      let html = '<option value="">Seleccione Provincia</option>';
-      provincias.forEach(p => html += `<option value="${p}">${p}</option>`);
-      selProv.innerHTML = html;
-    }
-
-    function poblarDistritos(dep, prov) {
-      const selDist = document.getElementById("cli-dist");
-      selDist.innerHTML = '<option value="">Seleccione Distrito</option>';
-
-      if (!dep || !prov) return;
-
-      const distritos = [...new Set(
-        dbUbigeo
-          .filter(i => normalizarTexto(i.departamento || i.DEPARTAMENTO) === normalizarTexto(dep) &&
-                       normalizarTexto(i.provincia || i.PROVINCIA) === normalizarTexto(prov))
-          .map(i => String(i.distrito || i.DISTRITO || "").trim())
-          .filter(d => d !== "" && d.toUpperCase() !== "DISTRITO")
-      )].sort();
-
-      let html = '<option value="">Seleccione Distrito</option>';
-      distritos.forEach(d => html += `<option value="${d}">${d}</option>`);
-      selDist.innerHTML = html;
-    }
-
-    function actualizarTipoEntregaSegunDistrito(distritoVal) {
-      const selEntrega = document.getElementById("cli-tipo-entrega");
-      const distNorm = normalizarTexto(distritoVal);
-
-      if (distNorm === "chimbote" || distNorm === "nuevo chimbote") {
-        selEntrega.innerHTML = `
-          <option value="Recojo en local">Recojo en local</option>
-          <option value="Delivery">Delivery</option>
-        `;
-      } else {
-        selEntrega.innerHTML = `<option value="Agencia">Agencia</option>`;
-      }
-
-      gestionarVisibilidadAgencia(selEntrega.value);
-    }
-
-    function gestionarVisibilidadAgencia(tipoEntregaVal) {
-      const containerAgencia = document.getElementById("cli-container-agencia");
-      const selAgencia = document.getElementById("cli-agencia");
-
-      if (tipoEntregaVal === "Agencia") {
-        containerAgencia.style.display = "block";
-        actualizarCampoSedeDireccion(selAgencia.value);
-      } else {
-        containerAgencia.style.display = "none";
-        actualizarCampoSedeDireccion("");
-      }
-    }
-
-    function actualizarCampoSedeDireccion(agenciaVal) {
-      const containerSede = document.getElementById("cli-container-sede");
-      const distNorm = normalizarTexto(document.getElementById("cli-dist").value);
-
-      if (agenciaVal === "Shalom") {
-        const sedes = dbShalom.filter(s => {
-          let dSheet = "";
-          Object.keys(s).forEach(k => { if (normalizarTexto(k).includes("distrito")) dSheet = s[k]; });
-          return normalizarTexto(dSheet) === distNorm;
-        });
-
-        if (sedes.length > 0) {
-          let opts = '<option value="">Seleccione Sede Shalom</option>';
-          sedes.forEach(s => {
-            let nSede = "";
-            Object.keys(s).forEach(k => { if (normalizarTexto(k).includes("sede")) nSede = s[k]; });
-            if (nSede) opts += `<option value="${nSede}">${nSede}</option>`;
-          });
-
-          containerSede.innerHTML = `
-            <label>Sede/Dirección:</label>
-            <select id="cli-direccion-sede" required>${opts}</select>
-          `;
-          return;
-        } else {
-          containerSede.innerHTML = `
-            <label>Sede/Dirección:</label>
-            <input type="text" id="cli-direccion-sede" value="Sin sede" disabled>
-          `;
-          return;
+      if (key.includes("dep")) {
+        const selDep = document.getElementById("crm-dep") || document.getElementById("departamento");
+        if (selDep && val) {
+          selDep.value = val;
+          poblarProvinciasWeb(val);
         }
       }
-
-      containerSede.innerHTML = `
-        <label>Sede/Dirección:</label>
-        <input type="text" id="cli-direccion-sede" placeholder="Dirección o punto de entrega" required>
-      `;
-    }
-
-    // Eventos
-    document.getElementById("cli-dep").addEventListener("change", (e) => {
-      poblarProvincias(e.target.value);
-      actualizarTipoEntregaSegunDistrito("");
-    });
-
-    document.getElementById("cli-prov").addEventListener("change", (e) => {
-      poblarDistritos(document.getElementById("cli-dep").value, e.target.value);
-      actualizarTipoEntregaSegunDistrito("");
-    });
-
-    document.getElementById("cli-dist").addEventListener("change", (e) => {
-      actualizarTipoEntregaSegunDistrito(e.target.value);
-    });
-
-    document.getElementById("cli-tipo-entrega").addEventListener("change", (e) => {
-      gestionarVisibilidadAgencia(e.target.value);
-    });
-
-    document.getElementById("cli-agencia").addEventListener("change", (e) => {
-      actualizarCampoSedeDireccion(e.target.value);
-    });
-
-    // Envío del formulario
-    document.getElementById("form-cliente").addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      const btn = document.getElementById("btn-guardar");
-      btn.innerText = "Enviando...";
-      btn.disabled = true;
-
-      const tipoEntrega = document.getElementById("cli-tipo-entrega").value;
-      const payload = {
-        telefono: celularCliente,
-        dni: document.getElementById("cli-dni").value,
-        nombre: document.getElementById("cli-nombre").value,
-        departamento: document.getElementById("cli-dep").value,
-        provincia: document.getElementById("cli-prov").value,
-        distrito: document.getElementById("cli-dist").value,
-        tipoEntrega: tipoEntrega,
-        agencia: tipoEntrega === "Agencia" ? document.getElementById("cli-agencia").value : "",
-        direccionSede: document.getElementById("cli-direccion-sede").value
-      };
-
-      try {
-        const res = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
-        const resJson = await res.json();
-
-        if (resJson.status === "success") {
-          document.getElementById("form-cliente").style.display = "none";
-          document.getElementById("mensaje-carga").style.display = "block";
-          document.getElementById("mensaje-carga").innerHTML = "✅ <b>¡Tus datos han sido registrados con éxito!</b><br>Gracias por completar la información.";
-        } else {
-          alert(resJson.message || "No se pudo registrar la información.");
-          btn.innerText = "💾 Guardar Mis Datos";
-          btn.disabled = false;
+      if (key.includes("prov")) {
+        const selProv = document.getElementById("crm-prov") || document.getElementById("provincia");
+        if (selProv && val) {
+          selProv.value = val;
+          const selDep = document.getElementById("crm-dep") || document.getElementById("departamento");
+          poblarDistritosWeb(selDep ? selDep.value : "", val);
         }
-      } catch (err) {
-        alert("Ocurrió un error al conectar con el servidor.");
-        btn.innerText = "💾 Guardar Mis Datos";
-        btn.disabled = false;
+      }
+      if (key.includes("dist")) {
+        const selDist = document.getElementById("crm-dist") || document.getElementById("distrito");
+        if (selDist && val) selDist.value = val;
+      }
+      if (key.includes("dir") || key.includes("sede")) {
+        const inputSede = document.getElementById("crm-direccion-sede") || document.getElementById("direccion");
+        if (inputSede && val) inputSede.value = val;
       }
     });
+  }
+}
 
-    window.onload = inicializar;
-  </script>
-</body>
-</html>
+// 6. Escuchar Cambios en los Desplegables de Ubigeo
+function configurarEventosUbigeoWeb() {
+  const selDep = document.getElementById("crm-dep") || document.getElementById("departamento");
+  const selProv = document.getElementById("crm-prov") || document.getElementById("provincia");
+
+  if (selDep) {
+    selDep.addEventListener("change", () => {
+      poblarProvinciasWeb(selDep.value);
+    });
+  }
+
+  if (selProv) {
+    selProv.addEventListener("change", () => {
+      poblarDistritosWeb(selDep ? selDep.value : "", selProv.value);
+    });
+  }
+}
+
+// 7. Inicializar Formulario al Cargar la Página
+document.addEventListener("DOMContentLoaded", async () => {
+  const celularLimpio = obtenerCelularDesdeToken();
+  const inputCelular = document.getElementById("crm-telefono") || document.getElementById("celular");
+
+  // Asignar el número de celular limpio (sin _timestamp)
+  if (inputCelular && celularLimpio) {
+    inputCelular.value = celularLimpio;
+  }
+
+  // Cargar BD y llenar campos existentes
+  await cargarBaseDatosWeb();
+  configurarEventosUbigeoWeb();
+
+  if (celularLimpio) {
+    autocompletarDatosCliente(celularLimpio);
+  }
+});
