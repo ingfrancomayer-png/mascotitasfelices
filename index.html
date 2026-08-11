@@ -224,8 +224,8 @@
           <select id="agencia" name="agencia">
             <option value="">Seleccione Agencia</option>
             <option value="Shalom">Shalom</option>
-            <option value="OLVA RECOJO EN AGENCIA">OLVA RECOJO EN AGENCIA</option>
-            <option value="OLVA DELIVERY">OLVA DELIVERY</option>
+            <option value="Olva - Recojo en Agencia">Olva - Recojo en Agencia</option>
+            <option value="Olva - Delivery">Olva - Delivery</option>
             <option value="Otros">Otra Agencia</option>
           </select>
         </div>
@@ -442,7 +442,7 @@
       } else {
         wrapperSelectSede.classList.add("hidden");
         wrapperManualSede.classList.remove("hidden");
-        labelManual.textContent = agencia.startsWith("OLVA") ? "Dirección / Sede de Olva" : "Dirección de Entrega";
+        labelManual.textContent = agencia.startsWith("Olva") ? "Dirección / Sede de Olva" : "Dirección de Entrega";
       }
     }
 
